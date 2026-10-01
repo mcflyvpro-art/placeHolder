@@ -1,0 +1,10 @@
+---
+import Base from '../layouts/Base.astro';
+import { brief } from '../lib/brief';
+---
+<Base title={`Page introuvable · ${brief.name}`} description="Cette page n’existe pas.">
+  <main style="min-height:70vh;display:grid;place-content:center;text-align:center;padding:2rem">
+    <h1>Page introuvable</h1>
+    <p><a href="/">Retour à l’accueil</a></p>
+  </main>
+</Base>

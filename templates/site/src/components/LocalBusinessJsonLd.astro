@@ -1,0 +1,26 @@
+---
+import { brief } from '../lib/brief';
+
+const c = brief.contact;
+const data: Record<string, unknown> = {
+  '@context': 'https://schema.org',
+  '@type': brief.schemaType || 'LocalBusiness',
+  name: brief.name,
+  url: Astro.site?.toString(),
+  telephone: c.phone ?? undefined,
+  email: c.email ?? undefined,
+  address: c.address
+    ? { '@type': 'PostalAddress', streetAddress: c.address, postalCode: c.postalCode ?? undefined, addressLocality: c.city ?? undefined, addressCountry: 'FR' }
+    : undefined,
+  geo: c.lat && c.lng ? { '@type': 'GeoCoordinates', latitude: c.lat, longitude: c.lng } : undefined,
+  hasMap: c.mapsUrl ?? undefined,
+  openingHours: brief.hours?.length ? brief.hours : undefined,
+  sameAs: brief.socials?.length ? brief.socials : undefined,
+  aggregateRating:
+    brief.google?.rating && brief.google?.reviews
+      ? { '@type': 'AggregateRating', ratingValue: brief.google.rating, reviewCount: brief.google.reviews }
+      : undefined,
+};
+const json = JSON.stringify(data, (_, v) => (v === undefined ? undefined : v));
+---
+<script type="application/ld+json" set:html={json} />

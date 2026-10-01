@@ -1,0 +1,8 @@
+---
+// Cloudflare Web Analytics : aucun cookie, aucune donnée personnelle → pas de bandeau requis.
+import { brief, isProduction } from '../lib/brief';
+const token = brief.analytics?.cloudflareToken;
+---
+{isProduction && token && (
+  <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon={JSON.stringify({ token })}></script>
+)}

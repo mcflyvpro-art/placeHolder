@@ -148,6 +148,9 @@ create table sites (
   production_domain text,
   mode text not null default 'preview' check (mode in ('preview','production','suspended')),
   form_email text,
+  turnstile_sitekey text,
+  turnstile_secret text,
+  analytics_token text,
   created_at timestamptz not null default now()
 );
 
