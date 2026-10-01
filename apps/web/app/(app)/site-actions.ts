@@ -35,15 +35,15 @@ export async function pushBriefAction(prospectId: string): Promise<Result> {
 
 export async function redeployAction(prospectId: string): Promise<Result> {
   const sb = await requireOwner();
-  const { data: site } = await sb.from('sites').select('repo').eq('prospect_id', prospectId).single();
+  const { data: site } = await sb.from('ph_sites').select('repo').eq('prospect_id', prospectId).single();
   if (!site) return { ok: false, error: 'Site introuvable' };
   return wrap(() => dispatchDeploy(site.repo));
 }
 
 export async function setFormEmail(prospectId: string, email: string): Promise<Result> {
   const sb = await requireOwner();
-  await sb.from('sites').update({ form_email: email || null }).eq('prospect_id', prospectId);
-  await sb.from('prospects').update({ client_email: email || null }).eq('id', prospectId);
+  await sb.from('ph_sites').update({ form_email: email || null }).eq('prospect_id', prospectId);
+  await sb.from('ph_prospects').update({ client_email: email || null }).eq('id', prospectId);
   revalidatePath(`/atelier/${prospectId}`);
   return { ok: true };
 }

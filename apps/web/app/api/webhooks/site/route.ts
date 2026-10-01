@@ -17,16 +17,16 @@ export async function POST(req: Request) {
   const body = JSON.parse(raw) as Payload;
   const repo = body.repo.split('/').pop();
   const sb = supabaseAdmin();
-  const { data: site } = await sb.from('sites').select('id, prospect_id').eq('repo', repo).maybeSingle();
+  const { data: site } = await sb.from('ph_sites').select('id, prospect_id').eq('repo', repo).maybeSingle();
   if (!site) return NextResponse.json({ error: 'unknown repo' }, { status: 404 });
-  await sb.from('site_versions').insert({
+  await sb.from('ph_site_versions').insert({
     site_id: site.id,
     sha: body.sha,
     message: body.message,
     url: body.status === 'success' ? body.url : null,
     quality: body.quality ? { ...body.quality, deploy: body.status } : { deploy: body.status },
   });
-  await sb.from('activities').insert({
+  await sb.from('ph_activities').insert({
     prospect_id: site.prospect_id,
     kind: 'site',
     data: { text: `Version ${body.sha.slice(0, 7)} · ${body.message}${body.quality?.passed === false ? ' · qualité à revoir' : ''}` },

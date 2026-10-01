@@ -40,16 +40,16 @@ function oldSiteText(html: string) {
 
 /** Crée repo + projet Pages + sous-domaine d'aperçu + Turnstile, et pousse le brief. Idempotent sur le prospect. */
 export async function createSite(sb: SupabaseClient, prospectId: string) {
-  const { data: p } = await sb.from('prospects').select('*').eq('id', prospectId).single();
+  const { data: p } = await sb.from('ph_prospects').select('*').eq('id', prospectId).single();
   if (!p?.slug) throw new Error('Prospect sans slug');
-  const { data: settings } = await sb.from('settings').select('preview_domain').single();
+  const { data: settings } = await sb.from('ph_settings').select('preview_domain').single();
   // Sans domaine de maquettes, l'aperçu reste sur <projet>.pages.dev.
   const previewDomain: string | null = settings?.preview_domain ?? null;
 
   const repo = repoName(p.slug);
   const project = projectName(p.slug);
 
-  let { data: site } = await sb.from('sites').select('*').eq('prospect_id', prospectId).maybeSingle();
+  let { data: site } = await sb.from('ph_sites').select('*').eq('prospect_id', prospectId).maybeSingle();
 
   const pages = await cf.ensurePagesProject(project);
   const pagesHost = pages.subdomain ?? `${project}.pages.dev`;
@@ -64,7 +64,7 @@ export async function createSite(sb: SupabaseClient, prospectId: string) {
   if (!site) {
     const turnstile = await cf.createTurnstile(`ph ${p.slug}`, [...new Set([host, pagesHost])]).catch(() => null);
     const { data, error } = await sb
-      .from('sites')
+      .from('ph_sites')
       .insert({
         prospect_id: prospectId,
         repo,
@@ -90,15 +90,15 @@ export async function createSite(sb: SupabaseClient, prospectId: string) {
   if (env.siteWebhookSecret) await gh.setSecret(repo, 'SITE_WEBHOOK_SECRET', env.siteWebhookSecret);
 
   await pushBrief(sb, prospectId, 'brief : données placeHolder');
-  await sb.from('prospects').update({ status: p.status === 'interesse' || p.status === 'a_appeler' || p.status === 'rappeler' ? 'maquette_en_cours' : p.status }).eq('id', prospectId);
-  await sb.from('activities').insert({ prospect_id: prospectId, kind: 'site', data: { text: `Site créé · ${host}` } });
+  await sb.from('ph_prospects').update({ status: p.status === 'interesse' || p.status === 'a_appeler' || p.status === 'rappeler' ? 'maquette_en_cours' : p.status }).eq('id', prospectId);
+  await sb.from('ph_activities').insert({ prospect_id: prospectId, kind: 'site', data: { text: `Site créé · ${host}` } });
   return site;
 }
 
 /** (Re)pousse brief.json, brand-dna.md, légal et assets dans le repo. */
 export async function pushBrief(sb: SupabaseClient, prospectId: string, message: string) {
-  const { data: p } = await sb.from('prospects').select('*').eq('id', prospectId).single();
-  const { data: site } = await sb.from('sites').select('*').eq('prospect_id', prospectId).single();
+  const { data: p } = await sb.from('ph_prospects').select('*').eq('id', prospectId).single();
+  const { data: site } = await sb.from('ph_sites').select('*').eq('prospect_id', prospectId).single();
   if (!p || !site) throw new Error('Site introuvable');
   const { brief, legal } = buildBrief(p, site);
   const files: gh.RepoFile[] = [
@@ -131,7 +131,7 @@ export async function pushBrief(sb: SupabaseClient, prospectId: string, message:
 
 /** Passage en production : domaine client branché, noindex levé, analytics activé. */
 export async function goLive(sb: SupabaseClient, prospectId: string, domain: string) {
-  const { data: site } = await sb.from('sites').select('*').eq('prospect_id', prospectId).single();
+  const { data: site } = await sb.from('ph_sites').select('*').eq('prospect_id', prospectId).single();
   if (!site) throw new Error('Site introuvable');
   await cf.addPagesDomain(site.pages_project, domain);
   await cf.addPagesDomain(site.pages_project, `www.${domain}`).catch(() => {});
@@ -139,7 +139,7 @@ export async function goLive(sb: SupabaseClient, prospectId: string, domain: str
   if (site.turnstile_sitekey) {
     await cf.updateTurnstileDomains(site.turnstile_sitekey, `ph ${site.pages_project}`, [domain, `www.${domain}`, new URL(site.preview_url).host]).catch(() => {});
   }
-  await sb.from('sites').update({ production_domain: domain, mode: 'production', analytics_token: analytics }).eq('id', site.id);
+  await sb.from('ph_sites').update({ production_domain: domain, mode: 'production', analytics_token: analytics }).eq('id', site.id);
   await gh.setVariable(site.repo, 'SITE_MODE', 'production');
   await pushBrief(sb, prospectId, 'production : domaine client');
 }

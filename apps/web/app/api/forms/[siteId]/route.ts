@@ -15,7 +15,7 @@ function cors(origin: string | null, allowed: string[]) {
 
 async function allowedOrigins(siteId: string) {
   const sb = supabaseAdmin();
-  const { data: site } = await sb.from('sites').select('id, preview_url, production_domain, pages_project, turnstile_secret, form_email, prospect_id, mode').eq('id', siteId).maybeSingle();
+  const { data: site } = await sb.from('ph_sites').select('id, preview_url, production_domain, pages_project, turnstile_secret, form_email, prospect_id, mode').eq('id', siteId).maybeSingle();
   if (!site) return { site: null, origins: [] as string[] };
   const origins = [site.preview_url && new URL(site.preview_url).origin, `https://${site.pages_project}.pages.dev`];
   if (site.production_domain) origins.push(`https://${site.production_domain}`, `https://www.${site.production_domain}`);
@@ -47,8 +47,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ siteId:
   }
 
   const sb = supabaseAdmin();
-  const { data: msg } = await sb.from('form_messages').insert({ site_id: site.id, payload }).select('id').single();
-  const { data: p } = await sb.from('prospects').select('name, client_email').eq('id', site.prospect_id).single();
+  const { data: msg } = await sb.from('ph_form_messages').insert({ site_id: site.id, payload }).select('id').single();
+  const { data: p } = await sb.from('ph_prospects').select('name, client_email').eq('id', site.prospect_id).single();
   const to = site.form_email ?? p?.client_email;
   if (to) {
     const sent = await sendMail({
@@ -57,7 +57,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ siteId:
       subject: `Nouveau message de ${payload.name} — ${p?.name ?? 'votre site'}`,
       text: `${payload.message}\n\n—\n${payload.name}\n${payload.email}${payload.phone ? `\n${payload.phone}` : ''}\n\nMessage reçu via le formulaire de votre site.`,
     }).catch(() => false);
-    if (sent && msg) await sb.from('form_messages').update({ forwarded: true }).eq('id', msg.id);
+    if (sent && msg) await sb.from('ph_form_messages').update({ forwarded: true }).eq('id', msg.id);
   }
   return NextResponse.json({ ok: true }, { headers });
 }

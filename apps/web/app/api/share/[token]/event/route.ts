@@ -9,7 +9,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
   const { token } = await params;
   const body = (await req.json().catch(() => ({}))) as { kind?: string; message?: string; device?: string; password?: string };
   const sb = supabaseAdmin();
-  const { data: link } = await sb.from('share_links').select('id, prospect_id, expires_at, password_hash, active, views').eq('token', token).maybeSingle();
+  const { data: link } = await sb.from('ph_share_links').select('id, prospect_id, expires_at, password_hash, active, views').eq('token', token).maybeSingle();
   if (!link || !link.active || new Date(link.expires_at) < new Date()) return NextResponse.json({ error: 'expired' }, { status: 410 });
 
   if (body.kind === 'unlock') {
@@ -30,16 +30,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
   const message = kind === 'change_request' ? String(body.message ?? '').trim().slice(0, 2000) : null;
   if (kind === 'change_request' && !message) return NextResponse.json({ error: 'empty' }, { status: 400 });
 
-  await sb.from('share_events').insert({ link_id: link.id, kind, device, message });
-  if (kind === 'view') await sb.from('share_links').update({ views: link.views + 1, last_view_at: new Date().toISOString() }).eq('id', link.id);
-  await sb.from('activities').insert({
+  await sb.from('ph_share_events').insert({ link_id: link.id, kind, device, message });
+  if (kind === 'view') await sb.from('ph_share_links').update({ views: link.views + 1, last_view_at: new Date().toISOString() }).eq('id', link.id);
+  await sb.from('ph_activities').insert({
     prospect_id: link.prospect_id,
     kind: kind === 'view' ? 'share_view' : kind === 'like' ? 'share_like' : 'share_change',
     data: { device, message },
   });
   if (kind !== 'view') {
-    const { data: p } = await sb.from('prospects').select('status').eq('id', link.prospect_id).single();
-    if (p) await sb.from('prospects').update({ status: advance(p.status as Status, 'negociation'), next_action_at: new Date().toISOString() }).eq('id', link.prospect_id);
+    const { data: p } = await sb.from('ph_prospects').select('status').eq('id', link.prospect_id).single();
+    if (p) await sb.from('ph_prospects').update({ status: advance(p.status as Status, 'negociation'), next_action_at: new Date().toISOString() }).eq('id', link.prospect_id);
   }
   return NextResponse.json({ ok: true });
 }

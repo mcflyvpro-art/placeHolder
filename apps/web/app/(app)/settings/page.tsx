@@ -19,7 +19,7 @@ const INTEGRATIONS: { key: keyof ReturnType<typeof integrations>; label: string;
 export default async function SettingsPage() {
   const sb = await requireOwner();
   const settings = await loadSettings(sb);
-  const { data: register } = await sb.from('legal_register').select('*').order('created_at');
+  const { data: register } = await sb.from('ph_legal_register').select('*').order('created_at');
   const i = integrations();
   const raw = settings.raw ?? {};
   return (

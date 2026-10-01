@@ -3,6 +3,7 @@ import { site } from '../src/site.mjs';
 import { worker } from '../src/worker.mjs';
 import { login } from '../src/login.mjs';
 import { db } from '../src/db.mjs';
+import { password } from '../src/password.mjs';
 
 const [cmd, ...args] = process.argv.slice(2);
 
@@ -16,8 +17,11 @@ switch (cmd) {
   case 'login':
     await login();
     break;
+  case 'password':
+    await password();
+    break;
   case 'status': {
-    const { data } = await db().from('ai_jobs').select('type, status').in('status', ['queued', 'running']);
+    const { data } = await db().from('ph_ai_jobs').select('type, status').in('status', ['queued', 'running']);
     console.log(`${data?.length ?? 0} tâche(s) IA en attente`);
     break;
   }
@@ -25,6 +29,7 @@ switch (cmd) {
     console.log(`ph — placeHolder
 
   ph login           configurer l'accès (trousseau macOS)
+  ph password        définir le mot de passe de l'outil
   ph site <slug>     ouvrir le site d'un client dans Claude Code
   ph worker          traiter les analyses IA demandées depuis l'outil
   ph status          état de la file IA`);

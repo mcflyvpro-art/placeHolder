@@ -1,19 +1,8 @@
 -- placeHolder — schéma initial
 create extension if not exists pgcrypto;
 
--- Propriétaire unique ---------------------------------------------------------
-create table app_config (
-  id boolean primary key default true check (id),
-  owner_email text not null
-);
-
-create or replace function is_owner() returns boolean
-language sql stable security definer set search_path = public as $$
-  select coalesce((select owner_email from app_config) = (auth.jwt() ->> 'email'), false)
-$$;
-
 -- Réglages --------------------------------------------------------------------
-create table settings (
+create table ph_settings (
   id boolean primary key default true check (id),
   company jsonb not null default '{}'::jsonb,         -- nom, siret, adresse, email, tel, iban, statut
   thresholds jsonb not null default '{}'::jsonb,      -- seuils scoring
@@ -23,12 +12,21 @@ create table settings (
   google_calls_month int not null default 0,
   google_month text not null default to_char(now(), 'YYYY-MM'),
   google_cap int not null default 950,
+  owner_password_hash text,
   updated_at timestamptz not null default now()
 );
-insert into settings default values;
+insert into ph_settings default values;
+
+create table ph_login_attempts (
+  id bigint generated always as identity primary key,
+  ip text,
+  ok boolean not null,
+  created_at timestamptz not null default now()
+);
+create index ph_login_attempts_recent on ph_login_attempts (created_at desc);
 
 -- Recherches ------------------------------------------------------------------
-create table searches (
+create table ph_searches (
   id uuid primary key default gen_random_uuid(),
   sectors text[] not null,
   zone jsonb not null,
@@ -44,9 +42,9 @@ create table searches (
 );
 
 -- Prospects -------------------------------------------------------------------
-create table prospects (
+create table ph_prospects (
   id uuid primary key default gen_random_uuid(),
-  search_id uuid references searches(id) on delete set null,
+  search_id uuid references ph_searches(id) on delete set null,
   name text not null,
   slug text unique,
   sector text,
@@ -104,29 +102,29 @@ create table prospects (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-create index prospects_triage_priority on prospects (triage, priority desc);
-create index prospects_status on prospects (status);
-create index prospects_next_action on prospects (next_action_at) where next_action_at is not null;
-create index prospects_siren on prospects (siren);
+create index ph_prospects_triage_priority on ph_prospects (triage, priority desc);
+create index ph_prospects_status on ph_prospects (status);
+create index ph_prospects_next_action on ph_prospects (next_action_at) where next_action_at is not null;
+create index ph_prospects_siren on ph_prospects (siren);
 
-create table blacklist (
+create table ph_blacklist (
   hash text primary key,
   created_at timestamptz not null default now()
 );
 
-create table activities (
+create table ph_activities (
   id uuid primary key default gen_random_uuid(),
-  prospect_id uuid not null references prospects(id) on delete cascade,
+  prospect_id uuid not null references ph_prospects(id) on delete cascade,
   kind text not null,          -- call, status, note, share_view, share_like, share_change, quote, payment, site
   data jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
-create index activities_prospect on activities (prospect_id, created_at desc);
+create index ph_activities_prospect on ph_activities (prospect_id, created_at desc);
 
 -- File IA ---------------------------------------------------------------------
-create table ai_jobs (
+create table ph_ai_jobs (
   id uuid primary key default gen_random_uuid(),
-  prospect_id uuid not null references prospects(id) on delete cascade,
+  prospect_id uuid not null references ph_prospects(id) on delete cascade,
   type text not null check (type in ('analyse','brand_dna','directions')),
   status text not null default 'queued' check (status in ('queued','running','done','error')),
   attempts int not null default 0,
@@ -136,12 +134,12 @@ create table ai_jobs (
   created_at timestamptz not null default now(),
   finished_at timestamptz
 );
-create index ai_jobs_queue on ai_jobs (status, created_at);
+create index ph_ai_jobs_queue on ph_ai_jobs (status, created_at);
 
 -- Sites -----------------------------------------------------------------------
-create table sites (
+create table ph_sites (
   id uuid primary key default gen_random_uuid(),
-  prospect_id uuid not null unique references prospects(id) on delete cascade,
+  prospect_id uuid not null unique references ph_prospects(id) on delete cascade,
   repo text not null,
   pages_project text not null,
   preview_url text,
@@ -154,20 +152,20 @@ create table sites (
   created_at timestamptz not null default now()
 );
 
-create table site_versions (
+create table ph_site_versions (
   id uuid primary key default gen_random_uuid(),
-  site_id uuid not null references sites(id) on delete cascade,
+  site_id uuid not null references ph_sites(id) on delete cascade,
   sha text not null,
   message text,
   url text,
   quality jsonb,              -- {lighthouse:{performance,accessibility,best,seo}, axe, links, slop, legal, todo, passed}
   created_at timestamptz not null default now()
 );
-create index site_versions_site on site_versions (site_id, created_at desc);
+create index ph_site_versions_site on ph_site_versions (site_id, created_at desc);
 
-create table form_messages (
+create table ph_form_messages (
   id uuid primary key default gen_random_uuid(),
-  site_id uuid not null references sites(id) on delete cascade,
+  site_id uuid not null references ph_sites(id) on delete cascade,
   payload jsonb not null,
   forwarded boolean not null default false,
   purge_at timestamptz not null default now() + interval '3 years',
@@ -175,9 +173,9 @@ create table form_messages (
 );
 
 -- Lien de présentation --------------------------------------------------------
-create table share_links (
+create table ph_share_links (
   id uuid primary key default gen_random_uuid(),
-  prospect_id uuid not null references prospects(id) on delete cascade,
+  prospect_id uuid not null references ph_prospects(id) on delete cascade,
   token text not null unique,
   expires_at timestamptz not null,
   password_hash text,
@@ -187,9 +185,9 @@ create table share_links (
   created_at timestamptz not null default now()
 );
 
-create table share_events (
+create table ph_share_events (
   id uuid primary key default gen_random_uuid(),
-  link_id uuid not null references share_links(id) on delete cascade,
+  link_id uuid not null references ph_share_links(id) on delete cascade,
   kind text not null check (kind in ('view','like','change_request')),
   device text,
   message text,
@@ -197,28 +195,28 @@ create table share_events (
 );
 
 -- Numérotation sans trou --------------------------------------------------------
-create table counters (
+create table ph_counters (
   kind text not null,
   year int not null,
   value int not null default 0,
   primary key (kind, year)
 );
 
-create or replace function next_number(p_kind text) returns text
+create or replace function ph_next_number(p_kind text) returns text
 language plpgsql security definer set search_path = public as $$
 declare
   y int := extract(year from now())::int;
   v int;
 begin
-  insert into counters(kind, year, value) values (p_kind, y, 0) on conflict do nothing;
-  update counters set value = value + 1 where kind = p_kind and year = y returning value into v;
+  insert into ph_counters(kind, year, value) values (p_kind, y, 0) on conflict do nothing;
+  update ph_counters set value = value + 1 where kind = p_kind and year = y returning value into v;
   return p_kind || '-' || y || '-' || lpad(v::text, 3, '0');
 end $$;
 
 -- Devis, factures, avoirs -------------------------------------------------------
-create table quotes (
+create table ph_quotes (
   id uuid primary key default gen_random_uuid(),
-  prospect_id uuid not null references prospects(id) on delete restrict,
+  prospect_id uuid not null references ph_prospects(id) on delete restrict,
   number text not null unique,
   offer text not null check (offer in ('oneOff','hybrid','subscription')),
   lines jsonb not null,
@@ -237,10 +235,10 @@ create table quotes (
   created_at timestamptz not null default now()
 );
 
-create table invoices (
+create table ph_invoices (
   id uuid primary key default gen_random_uuid(),
-  prospect_id uuid not null references prospects(id) on delete restrict,
-  quote_id uuid references quotes(id),
+  prospect_id uuid not null references ph_prospects(id) on delete restrict,
+  quote_id uuid references ph_quotes(id),
   number text not null unique,
   kind text not null check (kind in ('deposit','balance','subscription','one_off')),
   lines jsonb not null,
@@ -254,8 +252,8 @@ create table invoices (
   created_at timestamptz not null default now()
 );
 
-create or replace function invoices_immutable() returns trigger
-language plpgsql as $$
+create or replace function ph_invoices_immutable() returns trigger
+language plpgsql set search_path = public as $$
 begin
   if tg_op = 'DELETE' then
     raise exception 'Une facture ne peut pas être supprimée (émettre un avoir).';
@@ -266,12 +264,12 @@ begin
   end if;
   return new;
 end $$;
-create trigger invoices_immutable before update or delete on invoices
-  for each row execute function invoices_immutable();
+create trigger ph_invoices_immutable before update or delete on ph_invoices
+  for each row execute function ph_invoices_immutable();
 
-create table credit_notes (
+create table ph_credit_notes (
   id uuid primary key default gen_random_uuid(),
-  invoice_id uuid not null references invoices(id),
+  invoice_id uuid not null references ph_invoices(id),
   number text not null unique,
   total numeric(10,2) not null,
   reason text not null,
@@ -279,9 +277,9 @@ create table credit_notes (
   created_at timestamptz not null default now()
 );
 
-create table subscriptions (
+create table ph_subscriptions (
   id uuid primary key default gen_random_uuid(),
-  prospect_id uuid not null references prospects(id) on delete restrict,
+  prospect_id uuid not null references ph_prospects(id) on delete restrict,
   stripe_customer text,
   stripe_subscription text unique,
   monthly numeric(10,2) not null,
@@ -292,9 +290,9 @@ create table subscriptions (
   created_at timestamptz not null default now()
 );
 
-create table domains (
+create table ph_domains (
   id uuid primary key default gen_random_uuid(),
-  prospect_id uuid not null references prospects(id) on delete restrict,
+  prospect_id uuid not null references ph_prospects(id) on delete restrict,
   name text not null unique,
   registrar text not null default 'porkbun',
   status text not null default 'registered',
@@ -304,7 +302,7 @@ create table domains (
   created_at timestamptz not null default now()
 );
 
-create table legal_register (
+create table ph_legal_register (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   purpose text not null,
@@ -314,39 +312,35 @@ create table legal_register (
   recipients text not null,
   created_at timestamptz not null default now()
 );
-insert into legal_register (name, purpose, legal_basis, data_categories, retention, recipients) values
+insert into ph_legal_register (name, purpose, legal_basis, data_categories, retention, recipients) values
  ('Prospection', 'Identifier et contacter par téléphone des entreprises susceptibles d''avoir besoin d''un site', 'Intérêt légitime', 'Dénomination, dirigeants, coordonnées professionnelles, avis publics', 'Rejetés : 30 jours. Perdus : 12 mois. Liste d''opposition : empreinte irréversible', 'Aucun'),
  ('Clients', 'Gestion des devis, contrats, factures et abonnements', 'Exécution du contrat, obligation légale (factures)', 'Identité, coordonnées, données de facturation', 'Factures : 10 ans. Autres : 5 ans après la fin du contrat', 'Stripe (paiement), Porkbun (domaine)'),
  ('Formulaires des sites clients', 'Acheminer les messages des visiteurs au client (sous-traitance)', 'Instruction du client (art. 28 RGPD)', 'Nom, coordonnées, message', '3 ans', 'Client destinataire');
 
 -- updated_at --------------------------------------------------------------------
-create or replace function touch_updated_at() returns trigger language plpgsql as $$
+create or replace function ph_touch_updated_at() returns trigger language plpgsql set search_path = public as $$
 begin new.updated_at = now(); return new; end $$;
-create trigger prospects_touch before update on prospects for each row execute function touch_updated_at();
-create trigger searches_touch before update on searches for each row execute function touch_updated_at();
-create trigger settings_touch before update on settings for each row execute function touch_updated_at();
+create trigger ph_prospects_touch before update on ph_prospects for each row execute function ph_touch_updated_at();
+create trigger ph_searches_touch before update on ph_searches for each row execute function ph_touch_updated_at();
+create trigger ph_settings_touch before update on ph_settings for each row execute function ph_touch_updated_at();
 
--- RLS ---------------------------------------------------------------------------
+-- RLS : activée partout, aucune politique → seul le service role (serveur) accède.
+-- Isolation totale vis-à-vis des autres apps du même projet Supabase.
 do $$
 declare t text;
 begin
-  foreach t in array array['app_config','settings','searches','prospects','blacklist','activities','ai_jobs',
-    'sites','site_versions','form_messages','share_links','share_events','counters','quotes','invoices',
-    'credit_notes','subscriptions','domains','legal_register']
+  foreach t in array array['ph_settings','ph_searches','ph_prospects','ph_blacklist','ph_activities','ph_ai_jobs',
+    'ph_sites','ph_site_versions','ph_form_messages','ph_share_links','ph_share_events','ph_counters','ph_quotes','ph_invoices',
+    'ph_credit_notes','ph_subscriptions','ph_domains','ph_legal_register','ph_login_attempts']
   loop
     execute format('alter table %I enable row level security', t);
-    if t <> 'app_config' then
-      execute format('create policy owner_all on %I for all to authenticated using (is_owner()) with check (is_owner())', t);
-    end if;
+    execute format('revoke all on %I from anon, authenticated', t);
   end loop;
 end $$;
 
-revoke execute on function next_number(text) from public, anon, authenticated;
-grant execute on function next_number(text) to service_role;
+revoke execute on function ph_next_number(text) from public, anon, authenticated;
+grant execute on function ph_next_number(text) to service_role;
 
--- Storage -----------------------------------------------------------------------
-insert into storage.buckets (id, name, public) values ('assets', 'assets', false), ('documents', 'documents', false)
+-- Storage : buckets privés, aucune politique → accès service role uniquement.
+insert into storage.buckets (id, name, public) values ('ph-assets', 'ph-assets', false), ('ph-documents', 'ph-documents', false)
   on conflict do nothing;
-create policy owner_storage on storage.objects for all to authenticated
-  using (bucket_id in ('assets','documents') and is_owner())
-  with check (bucket_id in ('assets','documents') and is_owner());

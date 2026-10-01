@@ -14,14 +14,14 @@ import { requireOwner } from '@/lib/auth';
 import { enrichProspect } from '@/lib/enrich';
 
 async function log(sb: Awaited<ReturnType<typeof requireOwner>>, prospectId: string, kind: string, data: object = {}) {
-  await sb.from('activities').insert({ prospect_id: prospectId, kind, data });
+  await sb.from('ph_activities').insert({ prospect_id: prospectId, kind, data });
 }
 
 async function uniqueSlug(sb: Awaited<ReturnType<typeof requireOwner>>, name: string, city: string | null) {
   const base = slugify(`${name} ${city ?? ''}`) || 'site';
   for (let i = 0; i < 20; i++) {
     const candidate = i ? `${base}-${i + 1}` : base;
-    const { data } = await sb.from('prospects').select('id').eq('slug', candidate).maybeSingle();
+    const { data } = await sb.from('ph_prospects').select('id').eq('slug', candidate).maybeSingle();
     if (!data) return candidate;
   }
   return `${base}-${Date.now().toString(36)}`;
@@ -29,21 +29,21 @@ async function uniqueSlug(sb: Awaited<ReturnType<typeof requireOwner>>, name: st
 
 export async function triage(id: string, decision: 'kept' | 'dropped' | 'hot') {
   const sb = await requireOwner();
-  const { data: p } = await sb.from('prospects').select('id, name, city, place_id, siren, slug').eq('id', id).single();
+  const { data: p } = await sb.from('ph_prospects').select('id, name, city, place_id, siren, slug').eq('id', id).single();
   if (!p) return;
 
   if (decision === 'dropped') {
-    const { data: settings } = await sb.from('settings').select('retention_days').single();
+    const { data: settings } = await sb.from('ph_settings').select('retention_days').single();
     const days = settings?.retention_days ?? 30;
     const hashes = [p.place_id && (await sha256Hex(`place:${p.place_id}`)), p.siren && (await sha256Hex(`siren:${p.siren}`))].filter(Boolean) as string[];
-    if (hashes.length) await sb.from('blacklist').upsert(hashes.map((hash) => ({ hash })));
-    await sb.from('prospects').update({ triage: 'dropped', purge_at: new Date(Date.now() + days * 864e5).toISOString() }).eq('id', id);
+    if (hashes.length) await sb.from('ph_blacklist').upsert(hashes.map((hash) => ({ hash })));
+    await sb.from('ph_prospects').update({ triage: 'dropped', purge_at: new Date(Date.now() + days * 864e5).toISOString() }).eq('id', id);
     return;
   }
 
   const slug = p.slug ?? (await uniqueSlug(sb, p.name, p.city));
   await sb
-    .from('prospects')
+    .from('ph_prospects')
     .update({
       triage: decision,
       status: 'a_appeler',
@@ -59,23 +59,23 @@ export async function triage(id: string, decision: 'kept' | 'dropped' | 'hot') {
 /** Annule un tri récent : retour dans la pile (la liste noire est nettoyée). */
 export async function undoTriage(id: string) {
   const sb = await requireOwner();
-  const { data: p } = await sb.from('prospects').select('place_id, siren').eq('id', id).single();
+  const { data: p } = await sb.from('ph_prospects').select('place_id, siren').eq('id', id).single();
   if (p) {
     const hashes = [p.place_id && (await sha256Hex(`place:${p.place_id}`)), p.siren && (await sha256Hex(`siren:${p.siren}`))].filter(Boolean) as string[];
-    if (hashes.length) await sb.from('blacklist').delete().in('hash', hashes);
+    if (hashes.length) await sb.from('ph_blacklist').delete().in('hash', hashes);
   }
-  await sb.from('prospects').update({ triage: 'pending', purge_at: null, next_action_at: null }).eq('id', id);
+  await sb.from('ph_prospects').update({ triage: 'pending', purge_at: null, next_action_at: null }).eq('id', id);
 }
 
 export async function logCall(id: string, outcome: CallOutcome, nextAt?: string | null, note?: string) {
   const sb = await requireOwner();
-  const { data: p } = await sb.from('prospects').select('status, call_attempts').eq('id', id).single();
+  const { data: p } = await sb.from('ph_prospects').select('status, call_attempts').eq('id', id).single();
   if (!p) return;
   const attempts = (p.call_attempts ?? 0) + 1;
   const target = callOutcomeToStatus(outcome);
   const status: Status = target === 'perdu' ? 'perdu' : advance(p.status as Status, target);
   await sb
-    .from('prospects')
+    .from('ph_prospects')
     .update({
       status,
       call_attempts: attempts,
@@ -92,7 +92,7 @@ export async function logCall(id: string, outcome: CallOutcome, nextAt?: string 
 export async function setStatus(id: string, status: Status, lostReason?: string) {
   const sb = await requireOwner();
   await sb
-    .from('prospects')
+    .from('ph_prospects')
     .update({
       status,
       lost_reason: status === 'perdu' ? lostReason ?? 'Non précisé' : null,
@@ -105,7 +105,7 @@ export async function setStatus(id: string, status: Status, lostReason?: string)
 
 export async function setNextAction(id: string, at: string | null) {
   const sb = await requireOwner();
-  await sb.from('prospects').update({ next_action_at: at }).eq('id', id);
+  await sb.from('ph_prospects').update({ next_action_at: at }).eq('id', id);
   revalidatePath('/today');
 }
 
@@ -120,27 +120,27 @@ export async function updateProspect(id: string, patch: Record<string, unknown>)
   const sb = await requireOwner();
   const allowed = ['client_email', 'name', 'phone', 'pricing', 'final_price', 'brand_dna', 'website'];
   const clean = Object.fromEntries(Object.entries(patch).filter(([k]) => allowed.includes(k)));
-  await sb.from('prospects').update(clean).eq('id', id);
+  await sb.from('ph_prospects').update(clean).eq('id', id);
   revalidatePath(`/prospects/${id}`);
 }
 
 /** Opposition (RGPD) : liste noire + suppression immédiate. Bloqué s'il existe des documents comptables. */
 export async function forgetProspect(id: string) {
   const sb = await requireOwner();
-  const { count } = await sb.from('invoices').select('id', { count: 'exact', head: true }).eq('prospect_id', id);
+  const { count } = await sb.from('ph_invoices').select('id', { count: 'exact', head: true }).eq('prospect_id', id);
   if (count) return { ok: false as const, reason: 'Factures existantes : conservation légale de 10 ans' };
-  const { data: p } = await sb.from('prospects').select('place_id, siren').eq('id', id).single();
+  const { data: p } = await sb.from('ph_prospects').select('place_id, siren').eq('id', id).single();
   const hashes = [p?.place_id && (await sha256Hex(`place:${p.place_id}`)), p?.siren && (await sha256Hex(`siren:${p.siren}`))].filter(Boolean) as string[];
-  if (hashes.length) await sb.from('blacklist').upsert(hashes.map((hash) => ({ hash })));
-  await sb.from('quotes').delete().eq('prospect_id', id).eq('status', 'draft');
-  await sb.from('prospects').delete().eq('id', id);
+  if (hashes.length) await sb.from('ph_blacklist').upsert(hashes.map((hash) => ({ hash })));
+  await sb.from('ph_quotes').delete().eq('prospect_id', id).eq('status', 'draft');
+  await sb.from('ph_prospects').delete().eq('id', id);
   revalidatePath('/pipeline');
   return { ok: true as const };
 }
 
 export async function queueAiJob(id: string, type: 'analyse' | 'brand_dna' | 'directions') {
   const sb = await requireOwner();
-  const { data: open } = await sb.from('ai_jobs').select('id').eq('prospect_id', id).eq('type', type).in('status', ['queued', 'running']).maybeSingle();
-  if (!open) await sb.from('ai_jobs').insert({ prospect_id: id, type });
+  const { data: open } = await sb.from('ph_ai_jobs').select('id').eq('prospect_id', id).eq('type', type).in('status', ['queued', 'running']).maybeSingle();
+  if (!open) await sb.from('ph_ai_jobs').insert({ prospect_id: id, type });
   revalidatePath(`/prospects/${id}`);
 }

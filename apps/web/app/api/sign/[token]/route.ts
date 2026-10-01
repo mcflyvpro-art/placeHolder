@@ -8,9 +8,9 @@ import { env, integrations } from '@/lib/env';
 export async function GET(_: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const sb = supabaseAdmin();
-  const { data: q } = await sb.from('quotes').select('pdf_path').eq('sign_token', token).maybeSingle();
+  const { data: q } = await sb.from('ph_quotes').select('pdf_path').eq('sign_token', token).maybeSingle();
   if (!q?.pdf_path) return NextResponse.json({ error: 'not found' }, { status: 404 });
-  const { data } = await sb.storage.from('documents').createSignedUrl(q.pdf_path, 300);
+  const { data } = await sb.storage.from('ph-documents').createSignedUrl(q.pdf_path, 300);
   return data ? NextResponse.redirect(data.signedUrl) : NextResponse.json({ error: 'storage' }, { status: 500 });
 }
 
@@ -32,7 +32,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
 
   if (body.action === 'pay') {
     if (!integrations().stripe) return NextResponse.json({ error: 'stripe' }, { status: 503 });
-    const { data: q } = await sb.from('quotes').select('*').eq('sign_token', token).single();
+    const { data: q } = await sb.from('ph_quotes').select('*').eq('sign_token', token).single();
     if (!q || q.status !== 'signed') return NextResponse.json({ error: 'not signed' }, { status: 400 });
     const back = `${env.appUrl}/signer/${token}`;
     const session =

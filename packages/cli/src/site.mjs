@@ -11,12 +11,12 @@ export async function site(slug) {
   }
   const sb = db();
   const { owner, sitesDir } = config();
-  const { data: p } = await sb.from('prospects').select('id, name').eq('slug', slug).maybeSingle();
+  const { data: p } = await sb.from('ph_prospects').select('id, name').eq('slug', slug).maybeSingle();
   if (!p) {
     console.error(`Aucun prospect « ${slug} »`);
     process.exit(1);
   }
-  const { data: s } = await sb.from('sites').select('repo').eq('prospect_id', p.id).maybeSingle();
+  const { data: s } = await sb.from('ph_sites').select('repo').eq('prospect_id', p.id).maybeSingle();
   if (!s) {
     console.error('Site non créé : bouton « Créer le site » dans l’Atelier.');
     process.exit(1);

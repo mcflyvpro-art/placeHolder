@@ -9,12 +9,12 @@ export const metadata: Metadata = { title: 'Aperçu de votre site', robots: { in
 export default async function SharePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const sb = supabaseAdmin();
-  const { data: link } = await sb.from('share_links').select('id, prospect_id, expires_at, password_hash, active').eq('token', token).maybeSingle();
+  const { data: link } = await sb.from('ph_share_links').select('id, prospect_id, expires_at, password_hash, active').eq('token', token).maybeSingle();
   if (!link || !link.active) notFound();
   const expired = new Date(link.expires_at) < new Date();
   const [{ data: p }, { data: site }] = await Promise.all([
-    sb.from('prospects').select('name').eq('id', link.prospect_id).single(),
-    sb.from('sites').select('preview_url').eq('prospect_id', link.prospect_id).maybeSingle(),
+    sb.from('ph_prospects').select('name').eq('id', link.prospect_id).single(),
+    sb.from('ph_sites').select('preview_url').eq('prospect_id', link.prospect_id).maybeSingle(),
   ]);
   const store = await cookies();
   const unlocked = !link.password_hash || store.get(`ph_share_${link.id}`)?.value === 'ok';

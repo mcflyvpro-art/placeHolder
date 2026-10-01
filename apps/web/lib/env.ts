@@ -9,10 +9,8 @@ function req(name: string): string {
 const opt = (name: string) => process.env[name] || null;
 
 export const env = {
-  get supabaseUrl() { return req('NEXT_PUBLIC_SUPABASE_URL'); },
-  get supabaseAnon() { return req('NEXT_PUBLIC_SUPABASE_ANON_KEY'); },
+  get supabaseUrl() { return req('SUPABASE_URL'); },
   get supabaseService() { return req('SUPABASE_SERVICE_ROLE_KEY'); },
-  get ownerEmail() { return req('OWNER_EMAIL').toLowerCase(); },
   get appUrl() { return opt('APP_URL') ?? 'http://localhost:3000'; },
   get googleKey() { return opt('GOOGLE_PLACES_KEY'); },
   get pagespeedKey() { return opt('PAGESPEED_KEY'); },

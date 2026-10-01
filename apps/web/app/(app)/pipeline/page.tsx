@@ -8,9 +8,9 @@ export const metadata = { title: 'Pipeline' };
 export default async function PipelinePage() {
   const sb = await requireOwner();
   const [{ data: rows }, { data: sites }, { data: links }] = await Promise.all([
-    sb.from('prospects').select('id, name, city, status, need_score, pay_score, next_action_at').in('triage', ['kept', 'hot']).neq('status', 'perdu').order('priority', { ascending: false }).limit(500),
-    sb.from('sites').select('prospect_id'),
-    sb.from('share_links').select('prospect_id, views').eq('active', true),
+    sb.from('ph_prospects').select('id, name, city, status, need_score, pay_score, next_action_at').in('triage', ['kept', 'hot']).neq('status', 'perdu').order('priority', { ascending: false }).limit(500),
+    sb.from('ph_sites').select('prospect_id'),
+    sb.from('ph_share_links').select('prospect_id, views').eq('active', true),
   ]);
   const withSite = new Set((sites ?? []).map((x) => x.prospect_id));
   const views = new Map((links ?? []).map((l) => [l.prospect_id, l.views as number]));

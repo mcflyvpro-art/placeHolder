@@ -19,7 +19,7 @@ export default async function ClosingPage({ searchParams }: { searchParams: Prom
   const sb = await requireOwner();
   const settings = await loadSettings(sb);
   const [{ data: list }, revenue] = await Promise.all([
-    sb.from('prospects').select('id, name, city, status, updated_at').in('status', ['interesse', 'maquette_en_cours', 'maquette_envoyee', 'negociation', 'signe', 'paye', 'en_ligne', 'abonnement_actif']).order('updated_at', { ascending: false }).limit(60),
+    sb.from('ph_prospects').select('id, name, city, status, updated_at').in('status', ['interesse', 'maquette_en_cours', 'maquette_envoyee', 'negociation', 'signe', 'paye', 'en_ligne', 'abonnement_actif']).order('updated_at', { ascending: false }).limit(60),
     revenueThisYear(),
   ]);
   const threshold = Number((settings.raw?.thresholds as { tva?: number } | null)?.tva ?? 37500);
@@ -27,12 +27,12 @@ export default async function ClosingPage({ searchParams }: { searchParams: Prom
   let desk = null;
   if (selected) {
     const [{ data: p }, { data: quotes }, { data: invoices }, { data: site }, { data: domains }, { data: subs }] = await Promise.all([
-      sb.from('prospects').select('id, name, city, address, postal_code, phone, client_email, dirigeants, pricing, status').eq('id', selected).single(),
-      sb.from('quotes').select('id, number, offer, total, monthly, status, sign_token, created_at, signature').eq('prospect_id', selected).order('created_at', { ascending: false }),
-      sb.from('invoices').select('id, number, total, kind, paid_at, status, created_at').eq('prospect_id', selected).order('created_at', { ascending: false }),
-      sb.from('sites').select('id, preview_url, production_domain, mode').eq('prospect_id', selected).maybeSingle(),
-      sb.from('domains').select('name, status').eq('prospect_id', selected),
-      sb.from('subscriptions').select('monthly, status, unpaid_since').eq('prospect_id', selected),
+      sb.from('ph_prospects').select('id, name, city, address, postal_code, phone, client_email, dirigeants, pricing, status').eq('id', selected).single(),
+      sb.from('ph_quotes').select('id, number, offer, total, monthly, status, sign_token, created_at, signature').eq('prospect_id', selected).order('created_at', { ascending: false }),
+      sb.from('ph_invoices').select('id, number, total, kind, paid_at, status, created_at').eq('prospect_id', selected).order('created_at', { ascending: false }),
+      sb.from('ph_sites').select('id, preview_url, production_domain, mode').eq('prospect_id', selected).maybeSingle(),
+      sb.from('ph_domains').select('name, status').eq('prospect_id', selected),
+      sb.from('ph_subscriptions').select('monthly, status, unpaid_since').eq('prospect_id', selected),
     ]);
     if (p) {
       const d = ((p.dirigeants ?? []) as { nom?: string; prenoms?: string }[]).find((x) => x.nom);

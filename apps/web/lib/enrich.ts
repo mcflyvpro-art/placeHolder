@@ -11,7 +11,7 @@ import { companyBySiren } from '@/lib/sources/gouv';
  */
 export async function enrichProspect(id: string) {
   const sb = supabaseAdmin();
-  const { data: p } = await sb.from('prospects').select('*').eq('id', id).single();
+  const { data: p } = await sb.from('ph_prospects').select('*').eq('id', id).single();
   if (!p) return;
 
   const [audit, ps, company] = await Promise.all([
@@ -25,7 +25,7 @@ export async function enrichProspect(id: string) {
     const [meta, b64] = ps.screenshot.split(',');
     const type = meta?.match(/data:(.*?);/)?.[1] ?? 'image/jpeg';
     const path = `screenshots/${id}.${type.includes('webp') ? 'webp' : 'jpg'}`;
-    const { error } = await sb.storage.from('assets').upload(path, Buffer.from(b64 ?? '', 'base64'), { contentType: type, upsert: true });
+    const { error } = await sb.storage.from('ph-assets').upload(path, Buffer.from(b64 ?? '', 'base64'), { contentType: type, upsert: true });
     if (!error) screenshotPath = path;
   }
 
@@ -41,7 +41,7 @@ export async function enrichProspect(id: string) {
   });
 
   await sb
-    .from('prospects')
+    .from('ph_prospects')
     .update({
       audit: audit ?? p.audit,
       pagespeed: ps ? { performance: ps.performance, seo: ps.seo, accessibility: ps.accessibility } : p.pagespeed,

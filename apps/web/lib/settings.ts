@@ -15,7 +15,7 @@ export type Company = {
 };
 
 export async function loadSettings(sb: SupabaseClient) {
-  const { data } = await sb.from('settings').select('*').single();
+  const { data } = await sb.from('ph_settings').select('*').single();
   const grid: Grid = { ...DEFAULT_GRID, ...((data?.grid as Grid) ?? {}) };
   const company = (data?.company ?? {}) as Company;
   return { raw: data, grid, company, companyReady: !!(company.nom && company.siret && company.adresse && company.email) };

@@ -26,10 +26,10 @@ export default async function ProspectPage({ params }: { params: Promise<{ id: s
   const { id } = await params;
   const sb = await requireOwner();
   const [{ data: p }, { data: activities }, { data: jobs }, { data: site }, settings] = await Promise.all([
-    sb.from('prospects').select('*').eq('id', id).single(),
-    sb.from('activities').select('id, kind, data, created_at').eq('prospect_id', id).order('created_at', { ascending: false }).limit(60),
-    sb.from('ai_jobs').select('type, status, created_at, error').eq('prospect_id', id).order('created_at', { ascending: false }),
-    sb.from('sites').select('id, preview_url').eq('prospect_id', id).maybeSingle(),
+    sb.from('ph_prospects').select('*').eq('id', id).single(),
+    sb.from('ph_activities').select('id, kind, data, created_at').eq('prospect_id', id).order('created_at', { ascending: false }).limit(60),
+    sb.from('ph_ai_jobs').select('type, status, created_at, error').eq('prospect_id', id).order('created_at', { ascending: false }),
+    sb.from('ph_sites').select('id, preview_url').eq('prospect_id', id).maybeSingle(),
     loadSettings(sb),
   ]);
   if (!p) notFound();
@@ -38,7 +38,7 @@ export default async function ProspectPage({ params }: { params: Promise<{ id: s
   const audit = p.audit as SiteAudit | null;
   const ps = p.pagespeed as { performance: number | null; seo: number | null; accessibility: number | null } | null;
   const reasons = p.score_reasons as { need: string[]; pay: string[] };
-  const shot = p.screenshot_path ? (await sb.storage.from('assets').createSignedUrl(p.screenshot_path, 3600)).data?.signedUrl : null;
+  const shot = p.screenshot_path ? (await sb.storage.from('ph-assets').createSignedUrl(p.screenshot_path, 3600)).data?.signedUrl : null;
   const dirigeants = (p.dirigeants ?? []) as { nom?: string; prenoms?: string; qualite?: string; denomination?: string }[];
   const finances = (p.finances ?? {}) as Record<string, { ca?: number; resultat_net?: number }>;
   const lastYear = Object.keys(finances).sort().pop();

@@ -42,19 +42,19 @@ export function planTasks(sectors: string[], zone: Zone, budget: number): RadarT
 }
 
 async function googleQuota(sb: SupabaseClient): Promise<{ ok: boolean; used: number; cap: number }> {
-  const { data } = await sb.from('settings').select('google_calls_month, google_month, google_cap').single();
+  const { data } = await sb.from('ph_settings').select('google_calls_month, google_month, google_cap').single();
   const month = new Date().toISOString().slice(0, 7);
   if (!data) return { ok: false, used: 0, cap: 0 };
   if (data.google_month !== month) {
-    await sb.from('settings').update({ google_calls_month: 0, google_month: month }).eq('id', true);
+    await sb.from('ph_settings').update({ google_calls_month: 0, google_month: month }).eq('id', true);
     return { ok: true, used: 0, cap: data.google_cap };
   }
   return { ok: data.google_calls_month < data.google_cap, used: data.google_calls_month, cap: data.google_cap };
 }
 
 async function countGoogleCall(sb: SupabaseClient) {
-  const { data } = await sb.from('settings').select('google_calls_month').single();
-  await sb.from('settings').update({ google_calls_month: (data?.google_calls_month ?? 0) + 1 }).eq('id', true);
+  const { data } = await sb.from('ph_settings').select('google_calls_month').single();
+  await sb.from('ph_settings').update({ google_calls_month: (data?.google_calls_month ?? 0) + 1 }).eq('id', true);
 }
 
 async function pool<T, R>(items: T[], size: number, fn: (t: T) => Promise<R>): Promise<R[]> {
@@ -76,8 +76,8 @@ type Outcome = 'kept' | 'excluded' | 'duplicate';
 async function processPlace(sb: SupabaseClient, place: Place, task: RadarTask, searchId: string): Promise<Outcome> {
   const placeHash = await sha256Hex(`place:${place.id}`);
   const [{ data: existing }, { data: banned }] = await Promise.all([
-    sb.from('prospects').select('id').eq('place_id', place.id).maybeSingle(),
-    sb.from('blacklist').select('hash').eq('hash', placeHash).maybeSingle(),
+    sb.from('ph_prospects').select('id').eq('place_id', place.id).maybeSingle(),
+    sb.from('ph_blacklist').select('hash').eq('hash', placeHash).maybeSingle(),
   ]);
   if (existing || banned) return 'duplicate';
 
@@ -91,13 +91,13 @@ async function processPlace(sb: SupabaseClient, place: Place, task: RadarTask, s
 
   if (company) {
     const sirenHash = await sha256Hex(`siren:${company.siren}`);
-    const { data: bannedSiren } = await sb.from('blacklist').select('hash').eq('hash', sirenHash).maybeSingle();
+    const { data: bannedSiren } = await sb.from('ph_blacklist').select('hash').eq('hash', sirenHash).maybeSingle();
     if (bannedSiren) return 'duplicate';
   }
 
   // Chaîne : même nom déjà vu dans d'autres villes.
   const { count: sameName } = await sb
-    .from('prospects')
+    .from('ph_prospects')
     .select('id', { count: 'exact', head: true })
     .ilike('name', place.name)
     .neq('city', place.city ?? '');
@@ -125,7 +125,7 @@ async function processPlace(sb: SupabaseClient, place: Place, task: RadarTask, s
     entrepreneurIndividuel: company?.entrepreneurIndividuel ?? false,
   });
 
-  const { error } = await sb.from('prospects').insert({
+  const { error } = await sb.from('ph_prospects').insert({
     search_id: searchId,
     name: place.name,
     sector: task.sector,
@@ -166,7 +166,7 @@ export type StepResult = { done: boolean; progress: number; total: number; found
 
 /** Traite une tâche (une page Google = jusqu'à 20 entreprises). Appelé en boucle par l'UI. */
 export async function radarStep(sb: SupabaseClient, searchId: string): Promise<StepResult> {
-  const { data: search } = await sb.from('searches').select('*').eq('id', searchId).single();
+  const { data: search } = await sb.from('ph_searches').select('*').eq('id', searchId).single();
   if (!search) throw new Error('Recherche introuvable');
   const tasks = search.tasks as RadarTask[];
   const total = tasks.length;
@@ -174,14 +174,14 @@ export async function radarStep(sb: SupabaseClient, searchId: string): Promise<S
   const base = { total, found: search.found, kept: search.kept, excluded: search.excluded };
 
   if (idx === -1 || search.status !== 'running') {
-    if (search.status === 'running') await sb.from('searches').update({ status: 'done' }).eq('id', searchId);
+    if (search.status === 'running') await sb.from('ph_searches').update({ status: 'done' }).eq('id', searchId);
     const q = await googleQuota(sb);
     return { ...base, done: true, progress: total, quota: { used: q.used, cap: q.cap } };
   }
 
   const quota = await googleQuota(sb);
   if (!quota.ok) {
-    await sb.from('searches').update({ status: 'paused', error: 'Quota Google du mois atteint' }).eq('id', searchId);
+    await sb.from('ph_searches').update({ status: 'paused', error: 'Quota Google du mois atteint' }).eq('id', searchId);
     return { ...base, done: true, progress: idx, quota: { used: quota.used, cap: quota.cap }, error: 'quota' };
   }
 
@@ -205,7 +205,7 @@ export async function radarStep(sb: SupabaseClient, searchId: string): Promise<S
   const excludedTotal = search.excluded + excluded;
   const finished = tasks.every((t) => t.done);
   await sb
-    .from('searches')
+    .from('ph_searches')
     .update({ tasks, found, kept: keptTotal, excluded: excludedTotal, status: finished ? 'done' : 'running' })
     .eq('id', searchId);
 

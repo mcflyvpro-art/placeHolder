@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: 'Devis', robots: { index: false, foll
 export default async function SignerPage({ params, searchParams }: { params: Promise<{ token: string }>; searchParams: Promise<{ paid?: string }> }) {
   const { token } = await params;
   const { paid } = await searchParams;
-  const { data: q } = await supabaseAdmin().from('quotes').select('number, offer, lines, total, monthly, commitment_months, deposit_rate, valid_until, status, client, seller, signature').eq('sign_token', token).maybeSingle();
+  const { data: q } = await supabaseAdmin().from('ph_quotes').select('number, offer, lines, total, monthly, commitment_months, deposit_rate, valid_until, status, client, seller, signature').eq('sign_token', token).maybeSingle();
   if (!q) notFound();
   const lines = q.lines as { label: string; detail?: string; unit: number; recurring?: boolean }[];
   const expired = q.status !== 'signed' && new Date(q.valid_until) < new Date(new Date().toISOString().slice(0, 10));

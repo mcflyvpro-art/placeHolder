@@ -10,10 +10,10 @@ export const metadata = { title: 'Atelier' };
 export default async function AtelierList() {
   const sb = await requireOwner();
   const { data: sites } = await sb
-    .from('sites')
-    .select('id, prospect_id, preview_url, production_domain, mode, prospects(name, city, status), site_versions(sha, created_at, quality)')
+    .from('ph_sites')
+    .select('id, prospect_id, preview_url, production_domain, mode, prospects:ph_prospects(name, city, status), site_versions:ph_site_versions(sha, created_at, quality)')
     .order('created_at', { ascending: false });
-  const { data: candidates } = await sb.from('prospects').select('id, name, city').in('status', ['interesse', 'maquette_en_cours']).limit(20);
+  const { data: candidates } = await sb.from('ph_prospects').select('id, name, city').in('status', ['interesse', 'maquette_en_cours']).limit(20);
   const withSite = new Set((sites ?? []).map((s) => s.prospect_id));
   const waiting = (candidates ?? []).filter((c) => !withSite.has(c.id));
 

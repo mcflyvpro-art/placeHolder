@@ -16,15 +16,15 @@ export default async function TodayPage() {
   const twoDays = new Date(Date.now() - 48 * 3600e3).toISOString();
 
   const [due, hot, views, changes, building, unpaid, paid, subs, pending] = await Promise.all([
-    sb.from('prospects').select('id, name, city, phone, next_action_at').lte('next_action_at', new Date(Date.now() + 12 * 3600e3).toISOString()).not('status', 'in', '(perdu,en_ligne,abonnement_actif)').order('next_action_at').limit(30),
-    sb.from('prospects').select('id, name, city, phone').eq('triage', 'hot').eq('status', 'a_appeler').limit(20),
-    sb.from('share_events').select('created_at, device, share_links!inner(prospect_id, prospects!inner(id, name, phone))').eq('kind', 'view').gte('created_at', twoDays).order('created_at', { ascending: false }).limit(20),
-    sb.from('share_events').select('created_at, message, kind, share_links!inner(prospect_id, prospects!inner(id, name))').in('kind', ['change_request', 'like']).gte('created_at', new Date(Date.now() - 14 * 864e5).toISOString()).order('created_at', { ascending: false }).limit(20),
-    sb.from('prospects').select('id, name, city').eq('status', 'maquette_en_cours').limit(20),
-    sb.from('subscriptions').select('id, monthly, unpaid_since, prospects(id, name)').not('unpaid_since', 'is', null),
-    sb.from('invoices').select('total').gte('paid_at', monthStart),
-    sb.from('subscriptions').select('monthly').eq('status', 'active'),
-    sb.from('prospects').select('id', { count: 'exact', head: true }).eq('triage', 'pending'),
+    sb.from('ph_prospects').select('id, name, city, phone, next_action_at').lte('next_action_at', new Date(Date.now() + 12 * 3600e3).toISOString()).not('status', 'in', '(perdu,en_ligne,abonnement_actif)').order('next_action_at').limit(30),
+    sb.from('ph_prospects').select('id, name, city, phone').eq('triage', 'hot').eq('status', 'a_appeler').limit(20),
+    sb.from('ph_share_events').select('created_at, device, share_links:ph_share_links!inner(prospect_id, prospects:ph_prospects!inner(id, name, phone))').eq('kind', 'view').gte('created_at', twoDays).order('created_at', { ascending: false }).limit(20),
+    sb.from('ph_share_events').select('created_at, message, kind, share_links:ph_share_links!inner(prospect_id, prospects:ph_prospects!inner(id, name))').in('kind', ['change_request', 'like']).gte('created_at', new Date(Date.now() - 14 * 864e5).toISOString()).order('created_at', { ascending: false }).limit(20),
+    sb.from('ph_prospects').select('id, name, city').eq('status', 'maquette_en_cours').limit(20),
+    sb.from('ph_subscriptions').select('id, monthly, unpaid_since, prospects:ph_prospects(id, name)').not('unpaid_since', 'is', null),
+    sb.from('ph_invoices').select('total').gte('paid_at', monthStart),
+    sb.from('ph_subscriptions').select('monthly').eq('status', 'active'),
+    sb.from('ph_prospects').select('id', { count: 'exact', head: true }).eq('triage', 'pending'),
   ]);
 
   const revenue = (paid.data ?? []).reduce((a, r) => a + Number(r.total), 0);

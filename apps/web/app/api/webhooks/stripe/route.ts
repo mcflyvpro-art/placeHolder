@@ -26,7 +26,7 @@ export async function POST(req: Request) {
       if (!m.prospect_id) break;
       if (s.mode === 'payment' && s.payment_status === 'paid') {
         const total = (s.amount_total ?? 0) / 100;
-        const { data: q } = m.quote_id ? await sb.from('quotes').select('number').eq('id', m.quote_id).single() : { data: null };
+        const { data: q } = m.quote_id ? await sb.from('ph_quotes').select('number').eq('id', m.quote_id).single() : { data: null };
         await issueInvoice({
           prospectId: m.prospect_id,
           quoteId: m.quote_id ?? null,
@@ -36,13 +36,13 @@ export async function POST(req: Request) {
           paidAt: new Date().toISOString(),
           stripeRef: (s.payment_intent as string) ?? s.id,
         });
-        const { data: p } = await sb.from('prospects').select('status').eq('id', m.prospect_id).single();
-        if (p) await sb.from('prospects').update({ status: advance(p.status as Status, 'paye') }).eq('id', m.prospect_id);
+        const { data: p } = await sb.from('ph_prospects').select('status').eq('id', m.prospect_id).single();
+        if (p) await sb.from('ph_prospects').update({ status: advance(p.status as Status, 'paye') }).eq('id', m.prospect_id);
       }
       if (s.mode === 'subscription' && s.subscription) {
         const sub = await stripe().subscriptions.retrieve(s.subscription as string);
-        const { data: q } = m.quote_id ? await sb.from('quotes').select('commitment_months').eq('id', m.quote_id).single() : { data: null };
-        await sb.from('subscriptions').upsert(
+        const { data: q } = m.quote_id ? await sb.from('ph_quotes').select('commitment_months').eq('id', m.quote_id).single() : { data: null };
+        await sb.from('ph_subscriptions').upsert(
           {
             prospect_id: m.prospect_id,
             stripe_customer: s.customer as string,
@@ -54,8 +54,8 @@ export async function POST(req: Request) {
           },
           { onConflict: 'stripe_subscription' },
         );
-        const { data: p } = await sb.from('prospects').select('status').eq('id', m.prospect_id).single();
-        if (p) await sb.from('prospects').update({ status: advance(p.status as Status, 'abonnement_actif') }).eq('id', m.prospect_id);
+        const { data: p } = await sb.from('ph_prospects').select('status').eq('id', m.prospect_id).single();
+        if (p) await sb.from('ph_prospects').update({ status: advance(p.status as Status, 'abonnement_actif') }).eq('id', m.prospect_id);
       }
       break;
     }
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
       const inv = event.data.object;
       const subId = (inv.parent?.subscription_details?.subscription as string | undefined) ?? null;
       if (!subId) break;
-      const { data: sub } = await sb.from('subscriptions').select('id, prospect_id').eq('stripe_subscription', subId).maybeSingle();
+      const { data: sub } = await sb.from('ph_subscriptions').select('id, prospect_id').eq('stripe_subscription', subId).maybeSingle();
       const prospectId = sub?.prospect_id ?? (inv.parent?.subscription_details?.metadata?.prospect_id as string | undefined);
       if (!prospectId) break;
       const total = inv.amount_paid / 100;
@@ -76,21 +76,21 @@ export async function POST(req: Request) {
         paidAt: new Date().toISOString(),
         stripeRef: inv.id ?? null,
       });
-      if (sub) await sb.from('subscriptions').update({ unpaid_since: null, status: 'active' }).eq('id', sub.id);
+      if (sub) await sb.from('ph_subscriptions').update({ unpaid_since: null, status: 'active' }).eq('id', sub.id);
       break;
     }
     case 'invoice.payment_failed': {
       const inv = event.data.object;
       const subId = inv.parent?.subscription_details?.subscription as string | undefined;
       if (subId) {
-        const { data: sub } = await sb.from('subscriptions').select('id, unpaid_since').eq('stripe_subscription', subId).maybeSingle();
-        if (sub && !sub.unpaid_since) await sb.from('subscriptions').update({ unpaid_since: new Date().toISOString(), status: 'past_due' }).eq('id', sub.id);
+        const { data: sub } = await sb.from('ph_subscriptions').select('id, unpaid_since').eq('stripe_subscription', subId).maybeSingle();
+        if (sub && !sub.unpaid_since) await sb.from('ph_subscriptions').update({ unpaid_since: new Date().toISOString(), status: 'past_due' }).eq('id', sub.id);
       }
       break;
     }
     case 'customer.subscription.deleted': {
       const sub = event.data.object;
-      await sb.from('subscriptions').update({ status: 'canceled' }).eq('stripe_subscription', sub.id);
+      await sb.from('ph_subscriptions').update({ status: 'canceled' }).eq('stripe_subscription', sub.id);
       break;
     }
   }

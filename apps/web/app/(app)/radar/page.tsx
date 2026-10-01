@@ -8,8 +8,8 @@ export const metadata = { title: 'Radar' };
 export default async function RadarPage() {
   const sb = await requireOwner();
   const [{ data: settings }, { data: searches }] = await Promise.all([
-    sb.from('settings').select('google_calls_month, google_cap, google_month').single(),
-    sb.from('searches').select('id, sectors, zone, status, found, kept, excluded, tasks, error, created_at').order('created_at', { ascending: false }).limit(12),
+    sb.from('ph_settings').select('google_calls_month, google_cap, google_month').single(),
+    sb.from('ph_searches').select('id, sectors, zone, status, found, kept, excluded, tasks, error, created_at').order('created_at', { ascending: false }).limit(12),
   ]);
   const month = new Date().toISOString().slice(0, 7);
   const used = settings?.google_month === month ? settings.google_calls_month : 0;

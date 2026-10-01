@@ -2,6 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
+import { SESSION_COOKIE } from '@/lib/session';
 import { requireOwner } from '@/lib/auth';
 import type { Grid } from '@ph/core';
 
@@ -16,7 +18,7 @@ export async function saveCompany(_: unknown, form: FormData): Promise<{ ok: boo
     nom: get('nom'), siret, adresse: get('adresse'), email: get('email'), telephone: get('telephone'),
     iban: get('iban').replace(/\s/g, ''), bic: get('bic'), activite: get('activite'),
   };
-  await sb.from('settings').update({ company }).eq('id', true);
+  await sb.from('ph_settings').update({ company }).eq('id', true);
   revalidatePath('/settings');
   revalidatePath('/closing');
   return { ok: true };
@@ -29,9 +31,9 @@ export async function saveGeneral(_: unknown, form: FormData): Promise<{ ok: boo
     return Number.isFinite(n) && n >= 0 ? n : d;
   };
   const preview = String(form.get('preview_domain') ?? '').trim().toLowerCase().replace(/^https?:\/\//, '') || null;
-  const { data } = await sb.from('settings').select('thresholds').single();
+  const { data } = await sb.from('ph_settings').select('thresholds').single();
   await sb
-    .from('settings')
+    .from('ph_settings')
     .update({
       preview_domain: preview,
       google_cap: Math.min(1000, num('google_cap', 950)),
@@ -45,12 +47,12 @@ export async function saveGeneral(_: unknown, form: FormData): Promise<{ ok: boo
 
 export async function saveGrid(grid: Grid) {
   const sb = await requireOwner();
-  await sb.from('settings').update({ grid }).eq('id', true);
+  await sb.from('ph_settings').update({ grid }).eq('id', true);
   revalidatePath('/settings');
 }
 
 export async function signOut() {
-  const sb = await requireOwner();
-  await sb.auth.signOut();
+  await requireOwner();
+  (await cookies()).delete(SESSION_COOKIE);
   redirect('/login');
 }

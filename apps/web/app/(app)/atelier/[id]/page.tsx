@@ -9,16 +9,16 @@ export default async function AtelierPage({ params }: { params: Promise<{ id: st
   const { id } = await params;
   const sb = await requireOwner();
   const [{ data: p }, { data: site }] = await Promise.all([
-    sb.from('prospects').select('id, name, slug, city, client_email, brand_dna, directions').eq('id', id).single(),
-    sb.from('sites').select('*').eq('prospect_id', id).maybeSingle(),
+    sb.from('ph_prospects').select('id, name, slug, city, client_email, brand_dna, directions').eq('id', id).single(),
+    sb.from('ph_sites').select('*').eq('prospect_id', id).maybeSingle(),
   ]);
   if (!p) notFound();
   const { data: versions } = site
-    ? await sb.from('site_versions').select('id, sha, message, url, quality, created_at').eq('site_id', site.id).order('created_at', { ascending: false }).limit(30)
+    ? await sb.from('ph_site_versions').select('id, sha, message, url, quality, created_at').eq('site_id', site.id).order('created_at', { ascending: false }).limit(30)
     : { data: [] };
   const { data: changes } = await sb
-    .from('share_events')
-    .select('message, created_at, share_links!inner(prospect_id)')
+    .from('ph_share_events')
+    .select('message, created_at, share_links:ph_share_links!inner(prospect_id)')
     .eq('kind', 'change_request')
     .eq('share_links.prospect_id', id)
     .order('created_at', { ascending: false })
