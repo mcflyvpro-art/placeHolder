@@ -1,7 +1,7 @@
 import { randomBytes, scryptSync } from 'node:crypto';
 import { db } from './db.mjs';
 
-function ask(question) {
+export function ask(question) {
   // Saisie masquée.
   return new Promise((resolve) => {
     process.stdout.write(question);
