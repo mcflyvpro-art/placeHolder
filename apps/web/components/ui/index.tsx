@@ -115,21 +115,22 @@ export const inlineFieldClass = s.inlineField;
 
 /* Jauge -------------------------------------------------------------------- */
 export function Gauge({ value, label, size = 52, tone }: { value: number; label?: string; size?: number; tone?: string }) {
-  const r = (size - 6) / 2;
+  const r = (size - 7) / 2;
   const c = 2 * Math.PI * r;
-  const color = tone ?? (value >= 70 ? 'var(--green)' : value >= 40 ? 'var(--orange)' : 'var(--red)');
+  // Chaque mesure a sa couleur (anneaux façon Apple Watch) : besoin = rose, capacité = cyan.
+  const color = tone ?? (label === 'Besoin' ? 'var(--need)' : label === 'Capacité' ? 'var(--pay)' : 'var(--label)');
   return (
     <div style={{ display: 'grid', justifyItems: 'center' }}>
       <div className={s.gauge} style={{ width: size, height: size }} role="meter" aria-valuenow={value} aria-valuemin={0} aria-valuemax={100} aria-label={label}>
         <svg width={size} height={size}>
-          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--fill)" strokeWidth="5" />
+          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={`color-mix(in srgb, ${color} 20%, transparent)`} strokeWidth="6" />
           <motion.circle
             cx={size / 2}
             cy={size / 2}
             r={r}
             fill="none"
             stroke={color}
-            strokeWidth="5"
+            strokeWidth="6"
             strokeLinecap="round"
             strokeDasharray={c}
             initial={{ strokeDashoffset: c }}

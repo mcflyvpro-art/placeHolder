@@ -21,9 +21,12 @@
 .card {
   position: absolute;
   inset: 0;
-  border-radius: var(--r-xl);
-  background: var(--bg-elevated);
-  box-shadow: var(--shadow-2);
+  border-radius: 34px;
+  padding: 12px;
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+  box-shadow: var(--glass-shadow);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -31,14 +34,16 @@
   -webkit-user-select: none;
   will-change: transform;
 }
-.top { box-shadow: var(--shadow-3); touch-action: none; cursor: grab; }
+.top { background: var(--glass-strong); box-shadow: var(--glass-shadow-lg); touch-action: none; cursor: grab; }
 .grabbing { cursor: grabbing; }
 
 .preview {
-  flex: 0 0 42%;
+  flex: 0 0 44%;
   background: var(--fill);
+  border-radius: 24px;
   position: relative;
   overflow: hidden;
+  box-shadow: inset 0 0 0 1px var(--glass-border);
 }
 .preview img {
   width: 100%;
@@ -54,22 +59,20 @@
   justify-items: center;
   gap: 8px;
   color: var(--label-2);
-  background:
-    radial-gradient(90% 70% at 50% 120%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%),
-    var(--fill);
+  background: radial-gradient(90% 80% at 50% 110%, color-mix(in srgb, var(--need) 22%, transparent), transparent 70%);
 }
-.noSite svg { width: 40px; height: 40px; color: var(--label-3); }
+.noSite svg { width: 42px; height: 42px; color: var(--label-2); }
 
 .body {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: var(--s-3);
-  padding: var(--s-4) var(--s-4) var(--s-4) var(--s-5);
+  padding: 18px 10px 6px;
   min-height: 0;
 }
 .titleRow { display: flex; gap: var(--s-3); align-items: flex-start; justify-content: space-between; }
-.name { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.name { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font: 800 1.875rem/1.02 var(--font-display) !important; letter-spacing: -0.04em !important; }
 .gauges { display: flex; gap: 10px; flex: none; }
 
 .reasons {
@@ -81,10 +84,10 @@
   gap: 6px;
 }
 .reasons li {
-  padding: 4px 9px;
-  border-radius: 7px;
-  background: var(--fill);
-  font: 500 0.8125rem/1.2 var(--font);
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: var(--fill-strong);
+  font: 600 0.8125rem/1.2 var(--font);
   letter-spacing: 0;
 }
 
@@ -94,7 +97,7 @@
   flex-wrap: wrap;
   gap: 6px 14px;
   align-items: center;
-  font: 400 0.8125rem/1.2 var(--font);
+  font: 500 0.8125rem/1.2 var(--font);
   color: var(--label-2);
 }
 .meta span { display: inline-flex; align-items: center; gap: 4px; }
@@ -109,7 +112,7 @@
   font: 800 1.25rem/1 var(--font-display);
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  background: var(--material-thick);
+  background: var(--glass-strong);
   -webkit-backdrop-filter: var(--blur);
   backdrop-filter: var(--blur);
   pointer-events: none;
@@ -118,11 +121,21 @@
 .stampDrop { right: 22px; color: var(--red); box-shadow: inset 0 0 0 2.5px var(--red); transform: rotate(8deg); }
 .stampHot { left: 50%; translate: -50% 0; color: var(--orange); box-shadow: inset 0 0 0 2.5px var(--orange); }
 
-.controls { display: flex; align-items: center; gap: 14px; }
-.round { width: 62px !important; height: 62px; border-radius: 50%; background: var(--bg-elevated); box-shadow: var(--shadow-2); }
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 999px;
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+  box-shadow: var(--glass-shadow-lg);
+}
+.round { width: 60px !important; height: 60px; border-radius: 50%; background: var(--fill-strong) !important; box-shadow: inset 0 1px 0 var(--glass-highlight) !important; }
 .round svg { width: 28px; height: 28px; stroke-width: 2.4; }
 .drop { color: var(--red); }
-.keep { color: var(--green); }
+.keep { color: var(--on-selected); background: var(--selected) !important; box-shadow: 0 8px 24px rgba(10, 6, 40, 0.25) !important; }
 .hot { width: 52px !important; height: 52px; color: var(--orange); }
 .hot svg { width: 24px; height: 24px; }
 .small {
@@ -133,8 +146,16 @@
   place-items: center;
 }
 .call {
-  background: var(--fill);
-  color: var(--green);
+  width: auto !important;
+  padding: 0 20px;
+  border-radius: 999px;
+  height: 52px !important;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 8px;
+  font: 700 0.9375rem/1 var(--font);
+  background: var(--fill-strong);
+  color: var(--label);
   transition: transform 100ms var(--ease-out);
 }
 .call:active { transform: scale(0.94); }

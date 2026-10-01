@@ -54,7 +54,7 @@ export function Shell({ children, counts }: { children: ReactNode; counts: Shell
         <nav className={s.sidebar} aria-label="Navigation principale">
           <div className={s.brand}>
             <span className={s.logoSlot} aria-hidden />
-            <span className={s.wordmark}>place<b>Holder</b></span>
+            <span className={s.wordmark}>placeHolder</span>
           </div>
           {NAV.map((n) => {
             const on = active(n.href);
@@ -69,7 +69,7 @@ export function Shell({ children, counts }: { children: ReactNode; counts: Shell
           })}
           <div className={s.sidebarFoot}>
             <button type="button" onClick={() => setPalette(true)}>
-              <Search size={13} /> Rechercher <Kbd>⌘K</Kbd>
+              <Search size={15} /><span>Rechercher</span><Kbd>⌘K</Kbd>
             </button>
           </div>
         </nav>
@@ -110,8 +110,8 @@ export function PageHeader({ title, sub, actions }: { title: ReactNode; sub?: Re
   return (
     <header className={s.header}>
       <div className={s.headerTitle}>
-        <h1 className="t-title2">{title}</h1>
-        {sub ? <p className="t-foot c2 num">{sub}</p> : null}
+        <h1>{title}</h1>
+        {sub ? <p className="num">{sub}</p> : null}
       </div>
       {actions ? <div className={s.headerActions}>{actions}</div> : null}
     </header>

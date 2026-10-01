@@ -116,8 +116,8 @@ export function CardStack({
           <Check />
         </Button>
         {top?.phone ? (
-          <a href={`tel:${top.phone.replace(/\s/g, '')}`} className={`${s.small} ${s.call}`} aria-label="Appeler">
-            <Phone />
+          <a href={`tel:${top.phone.replace(/\s/g, '')}`} className={`${s.small} ${s.call}`}>
+            <Phone />Appeler
           </a>
         ) : (
           <span className={s.small} />
@@ -253,15 +253,15 @@ function CardBody({ card }: { card: TriageCard }) {
       <div className={s.body}>
         <div className={s.titleRow}>
           <div style={{ minWidth: 0 }}>
-            <h2 className={`t-title2 ${s.name}`}>{card.name}</h2>
+            <h2 className={s.name}>{card.name}</h2>
             <p className="t-sub c2">
               {card.sectorLabel}
               {card.city ? <> · <MapPin size={12} style={{ verticalAlign: '-1px' }} /> {card.city}</> : null}
             </p>
           </div>
           <div className={s.gauges}>
-            <Gauge value={card.need} label="Besoin" />
-            <Gauge value={card.pay} label="Capacité" />
+            <Gauge value={card.need} label="Besoin" size={58} />
+            <Gauge value={card.pay} label="Capacité" size={58} />
           </div>
         </div>
 
@@ -273,7 +273,7 @@ function CardBody({ card }: { card: TriageCard }) {
 
         <div className={s.meta}>
           {card.rating !== null ? (
-            <span><Star size={13} fill="currentColor" color="var(--yellow)" /> {card.rating.toString().replace('.', ',')} <span className="c3">({card.reviews})</span></span>
+            <span><Star size={13} fill="var(--yellow)" color="var(--yellow)" /> {card.rating.toString().replace('.', ',')} <span className="c3">({card.reviews})</span></span>
           ) : null}
           {card.since ? <span><Building2 size={13} /> {card.since}</span> : null}
           {card.employees ? <span>{card.employees}</span> : null}
