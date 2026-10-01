@@ -1,0 +1,12 @@
+.grid { display: grid; gap: var(--s-5); grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); align-items: start; }
+@media (max-width: 1080px) { .grid { grid-template-columns: 1fr; } }
+.col { display: grid; gap: var(--s-5); }
+.sectors { display: grid; gap: var(--s-4); padding: var(--s-4); }
+.sectorGroup { display: grid; gap: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.range { width: 100%; accent-color: var(--accent); }
+.live { display: grid; gap: var(--s-4); padding: var(--s-4); border-radius: var(--r-md); background: var(--bg-grouped); box-shadow: var(--shadow-1); }
+.bar { height: 6px; border-radius: 3px; background: var(--fill); overflow: hidden; }
+.barFill { height: 100%; background: var(--accent); border-radius: 3px; transform-origin: left; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); }
+.stat { display: grid; gap: 2px; }

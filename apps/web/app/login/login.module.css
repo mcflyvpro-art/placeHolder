@@ -1,0 +1,27 @@
+.wrap {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: var(--s-4);
+  background:
+    radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 60%),
+    var(--bg);
+}
+.card {
+  width: min(360px, 100%);
+  padding: var(--s-6) var(--s-5) var(--s-5);
+  border-radius: var(--r-xl);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-3);
+  display: grid;
+  gap: var(--s-5);
+}
+.wordmark {
+  text-align: center;
+  font: 700 1.75rem/1 var(--font-display);
+  letter-spacing: -0.035em;
+}
+.wordmark b { color: var(--accent); }
+.form { display: grid; gap: var(--s-3); }
+.form input { height: 46px; font-size: 1.0625rem; }
+.sent { display: grid; justify-items: center; gap: var(--s-2); padding: var(--s-3) 0; }
