@@ -204,7 +204,7 @@ textarea.field { height: auto; min-height: 88px; padding: 10px 12px; resize: ver
   justify-items: center;
   pointer-events: none;
 }
-@media (max-width: 899px) { .toasts { bottom: calc(var(--tabbar-h) + 16px + env(safe-area-inset-bottom)); } }
+@media (max-width: 899.98px) { .toasts { bottom: calc(var(--tabbar-h) + 16px + env(safe-area-inset-bottom)); } }
 .toast {
   pointer-events: auto;
   display: flex;

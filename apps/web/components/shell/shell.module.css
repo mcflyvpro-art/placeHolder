@@ -9,112 +9,100 @@
   bottom: var(--gutter);
   left: var(--gutter);
   width: var(--sidebar-w);
-  padding: 18px 12px 12px;
-  display: flex;
+  padding: 22px 12px 12px;
+  display: none;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
   z-index: 40;
   border-radius: var(--r-xl);
   background: var(--glass);
   -webkit-backdrop-filter: var(--blur);
   backdrop-filter: var(--blur);
   box-shadow: var(--glass-shadow-lg);
+  overflow-y: auto;
 }
 .brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: 36px;
-  padding: 0 10px;
-  margin-bottom: 18px;
-}
-.wordmark {
-  font: 800 1.25rem/1 var(--font-display);
-  letter-spacing: -0.045em;
+  padding: 0 12px 18px;
+  font: 800 1.5rem/1 var(--font-display);
+  letter-spacing: -0.05em;
   color: var(--label);
 }
-.wordmark b { font-weight: 800; }
-.logoSlot {
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  background: var(--fill-strong);
-  box-shadow: inset 0 1px 0 var(--glass-highlight);
-}
-.navLink {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  height: 40px;
-  padding: 0 12px;
-  border-radius: 15px;
-  color: var(--label-2);
-  font: 600 0.9063rem/1 var(--font);
-  letter-spacing: -0.01em;
-  transition: transform 100ms var(--ease-out), color 160ms var(--ease-out);
-}
-.navLink:hover { color: var(--label); }
-.navLink:active { transform: scale(0.97); }
-.navLink svg { width: 18px; height: 18px; stroke-width: 2; position: relative; z-index: 1; transition: color 160ms; }
-.navLink span { position: relative; z-index: 1; flex: 1; }
-.navActive, .navActive:hover { color: var(--on-selected); }
-.navPill {
-  position: absolute;
-  inset: 0;
-  border-radius: 15px;
-  background: var(--selected);
-  box-shadow: 0 6px 18px rgba(10, 6, 40, 0.18);
-}
-.navCount {
-  position: relative;
-  z-index: 1;
-  min-width: 22px;
-  height: 20px;
-  padding: 0 6px;
-  border-radius: 10px;
-  display: inline-grid;
-  place-items: center;
-  font: 700 0.6875rem/1 var(--font);
-  font-variant-numeric: tabular-nums;
-  background: var(--fill-strong);
-  color: inherit;
-}
-.navActive .navCount { background: color-mix(in srgb, var(--on-selected) 14%, transparent); }
-.sidebarFoot {
-  margin-top: auto;
-  padding: 4px;
-}
-.sidebarFoot button {
+.search {
   appearance: none;
   border: 0;
-  width: 100%;
   height: 38px;
-  padding: 0 12px;
-  border-radius: 14px;
+  margin: 0 2px 14px;
+  padding: 0 10px 0 12px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   gap: 8px;
   background: var(--fill);
-  color: var(--label-2);
-  font: 500 0.8125rem/1 var(--font);
+  box-shadow: inset 0 0 0 1px var(--glass-border);
+  color: var(--label-3);
+  font: 500 0.875rem/1 var(--font);
   transition: background-color 160ms, transform 100ms var(--ease-out);
 }
-.sidebarFoot button:hover { background: var(--fill-strong); }
-.sidebarFoot button:active { transform: scale(0.98); }
-.sidebarFoot button > span:first-of-type { flex: 1; text-align: left; }
+.search:hover { background: var(--fill-strong); color: var(--label-2); }
+.search:active { transform: scale(0.98); }
+.search > span:first-of-type { flex: 1; text-align: left; }
+.section { display: grid; gap: 2px; margin-bottom: 16px; }
+.sectionTitle {
+  padding: 0 12px 6px;
+  font: 600 0.75rem/1 var(--font);
+  color: var(--label-3);
+}
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  height: 42px;
+  padding: 0 10px 0 7px;
+  border-radius: 14px;
+  color: var(--label);
+  font: 600 0.9375rem/1 var(--font);
+  letter-spacing: -0.012em;
+  transition: background-color 120ms var(--ease-out), transform 100ms var(--ease-out);
+}
+.navLink:hover { background: var(--fill); }
+.navLink:active { transform: scale(0.98); }
+.navActive, .navActive:hover { background: var(--selected); color: var(--on-selected); box-shadow: 0 8px 22px rgba(3, 2, 16, 0.35); }
+.tile {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+.tile svg { width: 16px; height: 16px; stroke-width: 2.25; }
+.navLabel { flex: 1; }
+.navCount {
+  min-width: 24px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 11px;
+  display: inline-grid;
+  place-items: center;
+  font: 700 0.75rem/1 var(--font);
+  font-variant-numeric: tabular-nums;
+  background: var(--fill-strong);
+  color: var(--label);
+}
+.navActive .navCount { background: rgba(23, 18, 63, 0.1); color: var(--on-selected); }
+.sidebarFoot { margin-top: auto; padding-top: 8px; box-shadow: inset 0 1px 0 var(--separator); }
 
 .main {
   min-height: 100dvh;
 }
 
+.main { padding: 0 10px calc(var(--tabbar-h) + 24px + env(safe-area-inset-bottom)); }
 @media (min-width: 900px) {
-  .main { padding-left: calc(var(--sidebar-w) + var(--gutter) * 2); padding-right: var(--gutter); }
-  .tabbar { display: none; }
-}
-@media (max-width: 899px) {
-  .sidebar { display: none; }
-  .main { padding: 0 10px calc(var(--tabbar-h) + 24px + env(safe-area-inset-bottom)); }
+  .sidebar { display: flex; }
+  .main { padding: 0 var(--gutter) 0 calc(var(--sidebar-w) + var(--gutter) * 2); }
+  .tabbar { display: none !important; }
 }
 
 /* Barre d'onglets flottante (mobile) ---------------------------------------- */
@@ -144,8 +132,8 @@
   gap: 3px;
   border-radius: 999px;
   color: var(--label-2);
-  font: 600 0.625rem/1 var(--font);
-  letter-spacing: 0.01em;
+  font: 600 0.6875rem/1 var(--font);
+  letter-spacing: 0;
   transition: transform 100ms var(--ease-out), color 160ms, background-color 200ms;
 }
 .tab:active { transform: scale(0.92); }
@@ -173,7 +161,7 @@
 .headerTitle h1 { font: 800 1.625rem/1.1 var(--font-display); letter-spacing: -0.035em; }
 .headerTitle p { color: var(--label-2); font: 500 0.875rem/1.2 var(--font); }
 .headerActions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
-@media (max-width: 899px) {
+@media (max-width: 899.98px) {
   .header { top: 10px; margin-top: 10px; padding: 8px 8px 8px 18px; border-radius: 22px; }
   .headerTitle h1 { font-size: 1.375rem; }
   .headerTitle p { width: 100%; font-size: 0.8125rem; }
@@ -183,7 +171,7 @@
   padding: var(--s-5) 0 var(--s-7);
   max-width: 1320px;
 }
-@media (max-width: 899px) { .page { padding: var(--s-4) 0 var(--s-6); } }
+@media (max-width: 899.98px) { .page { padding: var(--s-4) 0 var(--s-6); } }
 
 /* Palette de commandes ---------------------------------------------------- */
 .palette {

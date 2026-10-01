@@ -2,13 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { motion } from 'motion/react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Ellipsis, Search } from 'lucide-react';
-import { NAV, MOBILE_TABS } from './nav';
+import type { NavItem } from './nav';
+import { NAV, MOBILE_TABS, SECTIONS, SETTINGS } from './nav';
 import { CommandPalette } from './CommandPalette';
 import { ToastProvider, Sheet, Group, Row, Kbd } from '@/components/ui';
-import { spring } from '@/lib/motion';
 import s from './shell.module.css';
 
 export type ShellCounts = Partial<Record<string, number>>;
@@ -52,25 +51,22 @@ export function Shell({ children, counts }: { children: ReactNode; counts: Shell
     <ToastProvider>
       <div className={s.app}>
         <nav className={s.sidebar} aria-label="Navigation principale">
-          <div className={s.brand}>
-            <span className={s.logoSlot} aria-hidden />
-            <span className={s.wordmark}>placeHolder</span>
-          </div>
-          {NAV.map((n) => {
-            const on = active(n.href);
-            return (
-              <Link key={n.href} href={n.href} className={`${s.navLink} ${on ? s.navActive : ''}`} aria-current={on ? 'page' : undefined}>
-                {on ? <motion.span layoutId="nav-pill" className={s.navPill} transition={spring.snappy} /> : null}
-                <n.icon />
-                <span>{n.label}</span>
-                {counts[n.href] ? <span className={s.navCount}>{counts[n.href]}</span> : null}
-              </Link>
-            );
-          })}
+          <div className={s.brand}>placeHolder</div>
+          <button type="button" className={s.search} onClick={() => setPalette(true)}>
+            <Search size={15} />
+            <span>Rechercher</span>
+            <Kbd>⌘K</Kbd>
+          </button>
+          {SECTIONS.map((sec) => (
+            <div key={sec.title} className={s.section}>
+              <p className={s.sectionTitle}>{sec.title}</p>
+              {sec.items.map((n) => (
+                <NavLink key={n.href} item={n} on={active(n.href)} count={counts[n.href]} />
+              ))}
+            </div>
+          ))}
           <div className={s.sidebarFoot}>
-            <button type="button" onClick={() => setPalette(true)}>
-              <Search size={15} /><span>Rechercher</span><Kbd>⌘K</Kbd>
-            </button>
+            <NavLink item={SETTINGS} on={active(SETTINGS.href)} />
           </div>
         </nav>
 
@@ -78,7 +74,7 @@ export function Shell({ children, counts }: { children: ReactNode; counts: Shell
 
         <nav className={s.tabbar} aria-label="Onglets">
           {NAV.filter((n) => MOBILE_TABS.includes(n.href)).map((n) => (
-            <Link key={n.href} href={n.href} className={`${s.tab} ${active(n.href) ? s.tabOn : ''}`}>
+            <Link key={n.href} href={n.href} prefetch className={`${s.tab} ${active(n.href) ? s.tabOn : ''}`}>
               <n.icon />
               {n.label}
             </Link>
@@ -93,7 +89,7 @@ export function Shell({ children, counts }: { children: ReactNode; counts: Shell
           <Group>
             {NAV.filter((n) => !MOBILE_TABS.includes(n.href)).map((n) => (
               <Row key={n.href} onClick={() => { setMore(false); router.push(n.href); }}>
-                <n.icon size={20} color="var(--accent)" />
+                <span className={s.tile} style={{ background: n.tint }}><n.icon /></span>
                 <span style={{ flex: 1 }}>{n.label}</span>
               </Row>
             ))}
@@ -103,6 +99,18 @@ export function Shell({ children, counts }: { children: ReactNode; counts: Shell
         <CommandPalette open={palette} onClose={() => setPalette(false)} />
       </div>
     </ToastProvider>
+  );
+}
+
+function NavLink({ item, on, count }: { item: NavItem; on: boolean; count?: number }) {
+  return (
+    <Link href={item.href} prefetch className={`${s.navLink} ${on ? s.navActive : ''}`} aria-current={on ? 'page' : undefined}>
+      <span className={s.tile} style={{ background: item.tint }}>
+        <item.icon />
+      </span>
+      <span className={s.navLabel}>{item.label}</span>
+      {count ? <span className={s.navCount}>{count}</span> : null}
+    </Link>
   );
 }
 

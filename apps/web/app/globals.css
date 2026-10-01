@@ -1,70 +1,72 @@
-/* placeHolder — design system « Liquid Glass » (apple-design, version calme) */
+/* placeHolder — design system « Liquid Glass » sombre, contraste élevé */
 
 :root {
-  color-scheme: light dark;
+  /* Thème unique : verre sombre, contraste élevé (direction B validée) */
+  color-scheme: dark;
 
-  /* Fond d'écran : aurores désaturées sur indigo profond (clair : brume pastel) */
-  --wall-base: #e8eaf6;
-  --wall-1: rgba(150, 140, 255, 0.55);
-  --wall-2: rgba(120, 200, 255, 0.5);
-  --wall-3: rgba(255, 170, 215, 0.38);
-  --wall-4: rgba(120, 225, 210, 0.35);
+  /* Fond d'écran : aurores calmes sur indigo profond */
+  --wall-base: #0d0b24;
+  --wall-1: rgba(98, 76, 220, 0.62);
+  --wall-2: rgba(36, 118, 214, 0.48);
+  --wall-3: rgba(170, 62, 150, 0.36);
+  --wall-4: rgba(22, 150, 160, 0.34);
 
   /* Verre */
-  --glass: rgba(255, 255, 255, 0.52);
-  --glass-strong: rgba(255, 255, 255, 0.72);
-  --glass-soft: rgba(255, 255, 255, 0.34);
-  --glass-border: rgba(255, 255, 255, 0.7);
-  --glass-highlight: rgba(255, 255, 255, 0.9);
-  --glass-shadow: 0 1px 0 var(--glass-highlight) inset, 0 0 0 1px var(--glass-border) inset, 0 10px 30px rgba(40, 30, 110, 0.10);
-  --glass-shadow-lg: 0 1px 0 var(--glass-highlight) inset, 0 0 0 1px var(--glass-border) inset, 0 30px 70px rgba(40, 30, 110, 0.18);
-  --blur: saturate(170%) blur(28px);
+  --glass: rgba(255, 255, 255, 0.075);
+  --glass-strong: rgba(255, 255, 255, 0.12);
+  --glass-soft: rgba(255, 255, 255, 0.05);
+  --glass-solid: rgba(22, 18, 52, 0.82);
+  --glass-border: rgba(255, 255, 255, 0.13);
+  --glass-highlight: rgba(255, 255, 255, 0.2);
+  --glass-shadow: 0 1px 0 var(--glass-highlight) inset, 0 0 0 1px var(--glass-border) inset, 0 12px 34px rgba(3, 2, 16, 0.35);
+  --glass-shadow-lg: 0 1px 0 var(--glass-highlight) inset, 0 0 0 1px var(--glass-border) inset, 0 34px 80px rgba(3, 2, 16, 0.6);
+  --blur: saturate(160%) blur(30px);
 
   /* Couleurs sémantiques */
   --bg: var(--wall-base);
   --bg-elevated: var(--glass-strong);
   --bg-grouped: var(--glass);
-  --fill: rgba(40, 30, 110, 0.07);
-  --fill-strong: rgba(40, 30, 110, 0.13);
-  --label: #15123a;
-  --label-2: rgba(21, 18, 58, 0.66);
-  --label-3: rgba(21, 18, 58, 0.42);
-  --separator: rgba(21, 18, 58, 0.1);
-  --accent: #4b3fd6;
-  --accent-press: #3d32bd;
-  --on-accent: #ffffff;
-  --selected: #15123a;
-  --on-selected: #ffffff;
-  --link: #4b3fd6;
-  --need: #e0457b;
-  --pay: #1b8fd6;
-  --green: #1f8f4e;
-  --orange: #c45a10;
-  --red: #d42d4f;
-  --yellow: #a96b00;
-  --purple: #7b4fd6;
-  --teal: #0f7f9a;
+  --fill: rgba(255, 255, 255, 0.08);
+  --fill-strong: rgba(255, 255, 255, 0.15);
+  --label: #ffffff;
+  --label-2: rgba(244, 242, 255, 0.8);
+  --label-3: rgba(244, 242, 255, 0.56);
+  --separator: rgba(255, 255, 255, 0.11);
+  --accent: #ffffff;
+  --accent-press: #e8e5ff;
+  --on-accent: #17123f;
+  --selected: #ffffff;
+  --on-selected: #17123f;
+  --link: #b4cfff;
+  --need: #ff8fb4;
+  --pay: #7fdcff;
+  --green: #6be8a3;
+  --orange: #ffb766;
+  --red: #ff8396;
+  --yellow: #ffd970;
+  --purple: #cdb4ff;
+  --teal: #84ece6;
 
-  /* Matériaux (barres, feuilles, palette) */
+  /* Matériaux */
   --material-thin: var(--glass-soft);
   --material-regular: var(--glass);
   --material-thick: var(--glass-strong);
   --material-edge: var(--glass-highlight);
-  --scrim: rgba(20, 16, 60, 0.32);
+  --scrim: rgba(5, 3, 20, 0.6);
 
   /* Profondeur */
   --shadow-1: var(--glass-shadow);
   --shadow-2: var(--glass-shadow);
   --shadow-3: var(--glass-shadow-lg);
 
-  /* Formes : plus généreuses, façon capsule */
+  /* Formes */
   --r-xs: 8px;
   --r-sm: 12px;
   --r-md: 18px;
   --r-lg: 24px;
   --r-xl: 32px;
 
-  /* Espacement (en rem pour suivre la taille de texte) */
+  /* Espacement */
   --s-1: 0.25rem;
   --s-2: 0.5rem;
   --s-3: 0.75rem;
@@ -73,13 +75,13 @@
   --s-6: 2rem;
   --s-7: 3rem;
 
-  /* Typographie : tracking dépendant de la taille */
+  /* Typographie */
   --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, sans-serif;
   --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
 
   --gutter: 14px;
-  --sidebar-w: 232px;
+  --sidebar-w: 248px;
   --toolbar-h: 64px;
   --tabbar-h: 66px;
 
@@ -87,51 +89,11 @@
   --ease-in: cubic-bezier(0.64, 0, 0.78, 0);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --wall-base: #110e2c;
-    --wall-1: rgba(92, 70, 210, 0.55);
-    --wall-2: rgba(30, 110, 200, 0.42);
-    --wall-3: rgba(150, 60, 140, 0.32);
-    --wall-4: rgba(20, 140, 150, 0.3);
-
-    --glass: rgba(255, 255, 255, 0.085);
-    --glass-strong: rgba(255, 255, 255, 0.13);
-    --glass-soft: rgba(255, 255, 255, 0.055);
-    --glass-border: rgba(255, 255, 255, 0.14);
-    --glass-highlight: rgba(255, 255, 255, 0.22);
-    --glass-shadow: 0 1px 0 var(--glass-highlight) inset, 0 0 0 1px var(--glass-border) inset, 0 12px 34px rgba(4, 2, 20, 0.32);
-    --glass-shadow-lg: 0 1px 0 var(--glass-highlight) inset, 0 0 0 1px var(--glass-border) inset, 0 34px 80px rgba(4, 2, 20, 0.55);
-
-    --fill: rgba(255, 255, 255, 0.09);
-    --fill-strong: rgba(255, 255, 255, 0.16);
-    --label: #f6f5ff;
-    --label-2: rgba(240, 238, 255, 0.7);
-    --label-3: rgba(240, 238, 255, 0.44);
-    --separator: rgba(255, 255, 255, 0.1);
-    --accent: #ffffff;
-    --accent-press: #e6e3ff;
-    --on-accent: #1d1752;
-    --selected: #ffffff;
-    --on-selected: #1d1752;
-    --link: #a9c8ff;
-    --need: #ff8fb4;
-    --pay: #7fdcff;
-    --green: #5fe39a;
-    --orange: #ffb35c;
-    --red: #ff7a90;
-    --yellow: #ffd76a;
-    --purple: #c4a8ff;
-    --teal: #7fe6e0;
-    --scrim: rgba(6, 4, 24, 0.55);
-  }
-}
-
 @media (prefers-reduced-transparency: reduce) {
   :root {
-    --glass: color-mix(in srgb, var(--wall-base) 88%, var(--label));
-    --glass-strong: color-mix(in srgb, var(--wall-base) 84%, var(--label));
-    --glass-soft: color-mix(in srgb, var(--wall-base) 92%, var(--label));
+    --glass: #1d1946;
+    --glass-strong: #262157;
+    --glass-soft: #18153b;
     --blur: none;
   }
 }

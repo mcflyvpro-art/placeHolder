@@ -1,0 +1,24 @@
+.wrap { display: grid; gap: var(--s-5); }
+.header {
+  margin-top: var(--gutter);
+  height: var(--toolbar-h);
+  border-radius: var(--r-lg);
+  background: var(--glass);
+  box-shadow: var(--glass-shadow);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+}
+.title, .block {
+  display: block;
+  border-radius: 12px;
+  background: linear-gradient(100deg, var(--fill) 30%, var(--fill-strong) 50%, var(--fill) 70%);
+  background-size: 300% 100%;
+  animation: shimmer 1.4s var(--ease-out) infinite;
+}
+.title { width: 140px; height: 22px; border-radius: 8px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--s-5); }
+.block { height: 180px; border-radius: var(--r-lg); box-shadow: var(--glass-shadow); }
+.tall { height: 280px; }
+@keyframes shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+@media (prefers-reduced-motion: reduce) { .title, .block { animation: none; } }

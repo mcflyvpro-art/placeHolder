@@ -7,7 +7,7 @@
   align-content: center;
   overflow: hidden;
 }
-@media (max-width: 899px) {
+@media (max-width: 899.98px) {
   .stage { min-height: calc(100dvh - var(--toolbar-h) - var(--tabbar-h)); padding-top: var(--s-2); gap: var(--s-4); }
 }
 
