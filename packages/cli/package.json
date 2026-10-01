@@ -1,0 +1,11 @@
+{
+  "name": "@ph/cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": { "ph": "bin/ph.mjs" },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.117.2",
+    "zod": "*"
+  }
+}

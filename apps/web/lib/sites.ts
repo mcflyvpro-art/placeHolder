@@ -43,22 +43,26 @@ export async function createSite(sb: SupabaseClient, prospectId: string) {
   const { data: p } = await sb.from('prospects').select('*').eq('id', prospectId).single();
   if (!p?.slug) throw new Error('Prospect sans slug');
   const { data: settings } = await sb.from('settings').select('preview_domain').single();
-  const previewDomain = settings?.preview_domain;
-  if (!previewDomain) throw new Error('Domaine d’aperçu non configuré (Réglages)');
+  // Sans domaine de maquettes, l'aperçu reste sur <projet>.pages.dev.
+  const previewDomain: string | null = settings?.preview_domain ?? null;
 
   const repo = repoName(p.slug);
   const project = projectName(p.slug);
-  const host = `${p.slug}.${previewDomain}`;
 
   let { data: site } = await sb.from('sites').select('*').eq('prospect_id', prospectId).maybeSingle();
 
   const pages = await cf.ensurePagesProject(project);
-  await cf.addPagesDomain(project, host);
-  const zone = await cf.zoneId(previewDomain);
-  if (zone) await cf.upsertCname(zone, host, pages.subdomain ?? `${project}.pages.dev`);
+  const pagesHost = pages.subdomain ?? `${project}.pages.dev`;
+  let host = pagesHost;
+  if (previewDomain) {
+    host = `${p.slug}.${previewDomain}`;
+    await cf.addPagesDomain(project, host);
+    const zone = await cf.zoneId(previewDomain);
+    if (zone) await cf.upsertCname(zone, host, pagesHost);
+  }
 
   if (!site) {
-    const turnstile = await cf.createTurnstile(`ph ${p.slug}`, [host, `${project}.pages.dev`]).catch(() => null);
+    const turnstile = await cf.createTurnstile(`ph ${p.slug}`, [...new Set([host, pagesHost])]).catch(() => null);
     const { data, error } = await sb
       .from('sites')
       .insert({
