@@ -87,3 +87,28 @@ export async function verifyTurnstile(secret: string, token: string, ip?: string
   const j = (await res.json()) as { success: boolean };
   return j.success;
 }
+
+/** Zone Cloudflare pour un domaine client (DNS + routage email + domaine Pages apex). */
+export async function ensureZone(domain: string) {
+  const existing = await cf<{ id: string; name_servers: string[] }[]>(`/zones?name=${encodeURIComponent(domain)}`);
+  if (existing[0]) return existing[0];
+  return cf<{ id: string; name_servers: string[] }>(`/zones`, {
+    method: 'POST',
+    body: JSON.stringify({ name: domain, account: { id: acc() }, type: 'full' }),
+  });
+}
+
+/** Routage email gratuit : contact@domaine → boîte du client (le client confirme l'adresse par email). */
+export async function setupEmailRouting(zone: string, domain: string, destination: string) {
+  await cf(`/zones/${zone}/email/routing/enable`, { method: 'POST' }).catch(() => {});
+  await cf(`/accounts/${acc()}/email/routing/addresses`, { method: 'POST', body: JSON.stringify({ email: destination }) }).catch(() => {});
+  await cf(`/zones/${zone}/email/routing/rules`, {
+    method: 'POST',
+    body: JSON.stringify({
+      name: `contact ${domain}`,
+      enabled: true,
+      matchers: [{ type: 'literal', field: 'to', value: `contact@${domain}` }],
+      actions: [{ type: 'forward', value: [destination] }],
+    }),
+  });
+}

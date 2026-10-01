@@ -76,3 +76,16 @@ export async function textSearch(query: string, pageToken?: string | null): Prom
   const json = (await res.json()) as { places?: RawPlace[]; nextPageToken?: string };
   return { places: (json.places ?? []).map(mapPlace), next: json.nextPageToken ?? null };
 }
+
+/** Rafraîchissement d'une fiche (Place Details Enterprise : 1 000 gratuits/mois, quota séparé). */
+export async function placeDetails(placeId: string): Promise<Place | null> {
+  const key = env.googleKey;
+  if (!key) return null;
+  const mask = FIELDS.split(',').filter((f) => f.startsWith('places.')).map((f) => f.replace('places.', '')).join(',');
+  const res = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}?languageCode=fr`, {
+    headers: { 'X-Goog-Api-Key': key, 'X-Goog-FieldMask': mask },
+    cache: 'no-store',
+  });
+  if (!res.ok) return null;
+  return mapPlace((await res.json()) as RawPlace);
+}

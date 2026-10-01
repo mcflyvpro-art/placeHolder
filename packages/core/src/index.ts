@@ -11,3 +11,4 @@ export * from './slug';
 export * from './hash';
 export * from './pipeline';
 export * from './cities';
+export * from './contract';
