@@ -117,7 +117,7 @@ export function CardStack({
         </Button>
         {top?.phone ? (
           <a href={`tel:${top.phone.replace(/\s/g, '')}`} className={`${s.small} ${s.call}`}>
-            <Phone />Appeler
+            <Phone /><span className={s.callLabel}>Appeler</span>
           </a>
         ) : (
           <span className={s.small} />

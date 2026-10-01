@@ -1,5 +1,6 @@
 .stage {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   justify-items: center;
   gap: var(--s-5);
   padding: var(--s-4) var(--s-4) var(--s-5);
@@ -170,3 +171,13 @@
   font: 400 0.75rem/1 var(--font);
 }
 @media (hover: none) { .keys { display: none; } }
+
+@media (max-width: 520px) {
+  .controls { gap: 8px; padding: 8px; max-width: 100%; }
+  .round { width: 54px !important; height: 54px; }
+  .hot { width: 46px !important; height: 46px; }
+  .small { width: 40px !important; height: 40px; }
+  .call { height: 46px !important; padding: 0 14px; }
+  .callLabel { display: none; }
+  .name { font-size: 1.5rem !important; }
+}
