@@ -1,12 +1,12 @@
 import 'server-only';
 
 function req(name: string): string {
-  const v = process.env[name];
+  const v = process.env[name]?.trim();
   if (!v) throw new Error(`Variable d'environnement manquante : ${name}`);
   return v;
 }
 
-const opt = (name: string) => process.env[name] || null;
+const opt = (name: string) => process.env[name]?.trim() || null;
 
 export const env = {
   get supabaseUrl() { return req('SUPABASE_URL'); },
