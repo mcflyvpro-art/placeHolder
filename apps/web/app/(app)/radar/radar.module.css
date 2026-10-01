@@ -1,6 +1,7 @@
 .grid { display: grid; gap: var(--s-5); grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); align-items: start; }
-@media (max-width: 1080px) { .grid { grid-template-columns: 1fr; } }
-.col { display: grid; gap: var(--s-5); }
+@media (max-width: 1180px) { .grid { grid-template-columns: 1fr; } }
+.col { display: grid; gap: var(--s-5); min-width: 0; align-content: start; }
+.col > * { min-width: 0; }
 .sectors { display: grid; gap: var(--s-4); padding: var(--s-4); }
 .sectorGroup { display: grid; gap: 8px; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }

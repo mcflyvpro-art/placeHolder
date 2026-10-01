@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, FileSignature } from 'lucide-react';
 import { STATUS_LABEL, type Status } from '@ph/core';
 import { requireOwner } from '@/lib/auth';
 import { integrations } from '@/lib/env';
@@ -7,7 +7,7 @@ import { loadSettings } from '@/lib/settings';
 import { effectiveOffers, type PricingState } from '@/lib/offers';
 import { revenueThisYear } from '@/lib/closing';
 import { PageHeader, Page } from '@/components/shell/Shell';
-import { Group, Row, Badge, Empty } from '@/components/ui';
+import { Group, Row, Empty } from '@/components/ui';
 import { euro, relative } from '@/lib/format';
 import { ClosingDesk } from './ClosingDesk';
 import s from './closing.module.css';
@@ -73,7 +73,7 @@ export default async function ClosingPage({ searchParams }: { searchParams: Prom
             ))}
             {!list?.length ? <Row><span className="c2 t-sub">Aucun prospect avancé</span></Row> : null}
           </Group>
-          <div>{desk ?? <Empty icon={<Badge>—</Badge>} title="Choisissez un prospect" />}</div>
+          <div>{desk ?? <Empty icon={<FileSignature />} title="Choisissez un prospect" />}</div>
         </div>
       </Page>
     </>
