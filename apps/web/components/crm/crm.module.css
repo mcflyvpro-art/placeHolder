@@ -1,0 +1,204 @@
+/* Arbre du parcours ------------------------------------------------------- */
+.treeWrap {
+  margin-top: var(--s-5);
+  padding: 22px 18px 18px;
+  border-radius: var(--r-xl);
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+  box-shadow: var(--glass-shadow);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.treeWrap::-webkit-scrollbar { display: none; }
+.tree {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(104px, 1fr));
+  gap: 14px;
+  min-width: 920px;
+}
+.col { position: relative; display: grid; justify-items: center; gap: 0; }
+.link {
+  position: absolute;
+  top: 46px;
+  right: calc(50% + 46px);
+  width: calc(100% - 92px + 14px);
+  height: 2px;
+  border-radius: 1px;
+  background: var(--fill-strong);
+  transform: translateX(-0px);
+}
+.link::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: -3px;
+  border: 4px solid transparent;
+  border-left: 6px solid var(--fill-strong);
+}
+.linkOn { background: color-mix(in srgb, var(--tint) 70%, transparent); }
+.linkOn::after { border-left-color: color-mix(in srgb, var(--tint) 70%, transparent); }
+
+.node {
+  position: relative;
+  appearance: none;
+  border: 0;
+  width: 92px;
+  height: 92px;
+  border-radius: 26px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 3px;
+  background: var(--glass-strong);
+  box-shadow: var(--glass-shadow), inset 0 -3px 0 color-mix(in srgb, var(--tint) 80%, transparent);
+  color: var(--label);
+  transition: transform 120ms var(--ease-out), opacity 160ms;
+  z-index: 1;
+}
+.node:active { transform: scale(0.95); }
+.nodeEmpty { opacity: 0.55; }
+.nodeEmpty:hover { opacity: 0.85; }
+.nodeOn { color: var(--on-selected); opacity: 1; }
+.nodePill {
+  position: absolute;
+  inset: 0;
+  border-radius: 26px;
+  background: var(--selected);
+  box-shadow: 0 12px 30px rgba(3, 2, 16, 0.45), inset 0 -3px 0 var(--tint);
+  z-index: -1;
+}
+.nodeNum {
+  position: absolute;
+  top: 9px;
+  left: 11px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font: 800 0.6875rem/1 var(--font);
+  background: var(--tint);
+  color: #120f2e;
+}
+.nodeCount { font: 800 1.875rem/1 var(--font-display); letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+.nodeLabel { font: 650 0.75rem/1.1 var(--font); letter-spacing: -0.005em; text-align: center; padding: 0 6px; }
+
+.branch {
+  width: 2px;
+  height: 18px;
+  margin-top: 4px;
+  border-radius: 1px;
+  background: repeating-linear-gradient(to bottom, var(--fill-strong) 0 4px, transparent 4px 7px);
+}
+.branchOn { background: repeating-linear-gradient(to bottom, color-mix(in srgb, var(--red) 70%, transparent) 0 4px, transparent 4px 7px); }
+.lostDot {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  font: 700 0.6875rem/1 var(--font);
+  background: var(--fill);
+  color: var(--label-3);
+}
+.lostDotOn { background: color-mix(in srgb, var(--red) 22%, transparent); color: var(--red); }
+.lostRail {
+  appearance: none;
+  border: 0;
+  margin-top: 10px;
+  width: 100%;
+  min-width: 920px;
+  height: 36px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--red) 10%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--red) 28%, transparent);
+  color: var(--red);
+  font: 700 0.8125rem/1 var(--font);
+  transition: background-color 160ms, transform 100ms var(--ease-out);
+}
+.lostRail:active { transform: scale(0.99); }
+.lostRailOn { background: color-mix(in srgb, var(--red) 24%, transparent); }
+
+/* Panneau de l'étape ------------------------------------------------------- */
+.panel { margin-top: var(--s-5); }
+.panelHead { display: flex; align-items: center; gap: 10px; padding: 0 6px 14px; }
+.panelHead h2 { font: 800 1.375rem/1 var(--font-display); letter-spacing: -0.03em; }
+.panelDot { width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 0%, transparent); }
+.panelCount { min-width: 26px; height: 24px; padding: 0 8px; border-radius: 12px; display: grid; place-items: center; background: var(--fill-strong); font: 700 0.8125rem/1 var(--font); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; align-items: start; }
+@media (max-width: 420px) { .grid { grid-template-columns: 1fr; } }
+
+.card {
+  display: grid;
+  gap: 12px;
+  padding: 16px 16px 14px;
+  border-radius: var(--r-lg);
+  background: var(--glass);
+  box-shadow: var(--glass-shadow);
+}
+.cardHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.cardName { color: var(--label); font: 750 1.0625rem/1.2 var(--font-display); letter-spacing: -0.02em; }
+.cardName:hover { text-decoration: underline; text-underline-offset: 3px; }
+.cardSub { margin-top: -6px; display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; font: 500 0.8125rem/1.3 var(--font); color: var(--label-2); }
+.preview { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; color: var(--link); font-weight: 600; }
+.notes { font: 400 0.8438rem/1.4 var(--font); color: var(--label-2); padding: 10px 12px; border-radius: 12px; background: var(--fill); }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 8px; }
+.fact { display: grid; gap: 4px; padding: 9px 11px; border-radius: 12px; background: var(--fill); min-width: 0; }
+.fact span { font: 600 0.6875rem/1 var(--font); color: var(--label-3); }
+.fact b { font: 700 0.875rem/1.2 var(--font); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.refuse { margin-left: auto; color: var(--red) !important; }
+.primaryLink, .ghostLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font: 650 0.8125rem/1 var(--font);
+  transition: transform 100ms var(--ease-out);
+}
+.primaryLink:active, .ghostLink:active { transform: scale(0.97); }
+.primaryLink { background: var(--accent); color: var(--on-accent); }
+.ghostLink { background: var(--glass-strong); color: var(--label); box-shadow: inset 0 0 0 1px var(--glass-border); }
+
+/* Feuilles ---------------------------------------------------------------- */
+.sheet { display: grid; gap: 14px; padding-top: 4px; }
+.sheetTitle { font: 750 1.125rem/1.2 var(--font-display); letter-spacing: -0.02em; }
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.field { display: grid; gap: 6px; font: 600 0.75rem/1 var(--font); color: var(--label-2); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Tableau Clients -------------------------------------------------------- */
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: var(--s-5) 0 14px; }
+.search { flex: 1; min-width: 220px; max-width: 360px; }
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: var(--glass);
+  box-shadow: var(--glass-shadow);
+}
+.table th {
+  text-align: left;
+  font: 600 0.75rem/1 var(--font);
+  color: var(--label-3);
+  padding: 14px 16px 10px;
+  white-space: nowrap;
+}
+.table td { padding: 12px 16px; border-top: 1px solid var(--separator); font: 500 0.875rem/1.3 var(--font); vertical-align: middle; }
+.table tr { transition: background-color 120ms; }
+.table tbody tr:hover { background: var(--fill); cursor: pointer; }
+.stagePill { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 999px; font: 700 0.75rem/1 var(--font); white-space: nowrap; }
+.stagePill i { width: 7px; height: 7px; border-radius: 50%; }
+.muted { color: var(--label-2); }
+.late { color: var(--red); font-weight: 600; }
+@media (max-width: 760px) {
+  .hideSm { display: none; }
+  .table td, .table th { padding-left: 12px; padding-right: 12px; }
+}

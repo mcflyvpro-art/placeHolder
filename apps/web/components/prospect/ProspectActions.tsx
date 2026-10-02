@@ -2,10 +2,11 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { STATUSES, type Status } from '@ph/core';
+import { STAGES, STATUS_LABEL, type Stage, type Status } from '@ph/core';
 import { PenTool, Share2, FileSignature, UserX, Copy, QrCode } from 'lucide-react';
 import { Button, Sheet, Group, Row, Segmented, fieldClass, useToast } from '@/components/ui';
-import { setStatus, forgetProspect } from '@/app/(app)/actions';
+import { forgetProspect } from '@/app/(app)/actions';
+import { moveTo, markLost } from '@/app/(app)/crm-actions';
 import { createShareLink } from '@/app/(app)/share-actions';
 import { CallButton } from './CallSheet';
 
@@ -20,7 +21,7 @@ export function ProspectActions({ id, name, phone, status, hasSite }: { id: stri
   const [password, setPassword] = useState('');
   const [link, setLink] = useState<{ url: string; qr: string } | null>(null);
 
-  const label = STATUSES.find((s) => s.key === status)?.label ?? status;
+  const label = STATUS_LABEL[status] ?? status;
 
   return (
     <>
@@ -32,15 +33,16 @@ export function ProspectActions({ id, name, phone, status, hasSite }: { id: stri
 
       <Sheet open={statusOpen} onClose={() => setStatusOpen(false)} label="Statut">
         <Group>
-          {STATUSES.filter((s) => s.key !== 'perdu').map((s) => (
-            <Row key={s.key} onClick={() => start(async () => { await setStatus(id, s.key); setStatusOpen(false); router.refresh(); })}>
-              <span style={{ flex: 1, fontWeight: s.key === status ? 600 : 400, color: s.key === status ? 'var(--accent)' : undefined }}>{s.label}</span>
+          {STAGES.map((st) => (
+            <Row key={st.key} onClick={() => start(async () => { await moveTo(id, st.key as Stage); setStatusOpen(false); router.refresh(); })}>
+              <span style={{ width: 10, height: 10, borderRadius: 5, background: st.tint }} />
+              <span style={{ flex: 1, fontWeight: st.key === status ? 800 : 500 }}>{st.label}</span>
             </Row>
           ))}
         </Group>
         <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
           <input className={fieldClass} placeholder="Raison de la perte" value={lost} onChange={(e) => setLost(e.target.value)} aria-label="Raison" />
-          <Button variant="danger" disabled={!lost.trim() || pending} onClick={() => start(async () => { await setStatus(id, 'perdu', lost); setStatusOpen(false); router.refresh(); })}>Perdu</Button>
+          <Button variant="danger" disabled={!lost.trim() || pending} onClick={() => start(async () => { await markLost(id, lost); setStatusOpen(false); router.refresh(); })}>Perdu</Button>
         </div>
         <Button
           variant="plain"

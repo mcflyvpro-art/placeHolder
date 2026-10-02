@@ -7,8 +7,6 @@ import { CardStack, type Decision, type TriageCard } from '@/components/triage/C
 import { Button, Empty, useToast } from '@/components/ui';
 import { triage, undoTriage } from '../actions';
 
-const LABEL: Record<Decision, string> = { kept: 'Gardé', dropped: 'Jeté', hot: 'À appeler maintenant' };
-
 export function TriageClient({ initial }: { initial: TriageCard[] }) {
   const router = useRouter();
   const toast = useToast();
@@ -21,7 +19,9 @@ export function TriageClient({ initial }: { initial: TriageCard[] }) {
       setCards((c) => c.filter((x) => x.id !== card.id));
       setHistory((h) => [{ card, d }, ...h].slice(0, 10));
       start(() => triage(card.id, d));
-      if (d === 'hot') toast({ text: `${card.name} · ${LABEL[d]}`, action: { label: 'Fiche', run: () => router.push(`/prospects/${card.id}`) } });
+      if (d !== 'dropped') {
+        toast({ text: `${card.name} → À créer`, action: { label: 'Créer le site', run: () => router.push(`/atelier/${card.id}`) } });
+      }
     },
     [router, toast],
   );

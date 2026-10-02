@@ -347,3 +347,23 @@ insert into storage.buckets (id, name, public) values ('ph-assets', 'ph-assets',
 
 -- 0002 : budget de requêtes Google par recherche
 alter table ph_searches add column budget int not null default 1, add column calls int not null default 0;
+
+-- 0003 : CRM en 8 étapes
+alter table ph_prospects
+  add column lost_stage text,
+  add column stage_at timestamptz not null default now(),
+  add column meeting_at timestamptz,
+  add column meeting_mode text,
+  add column meeting_notes text,
+  add column proposal jsonb,
+  add column iterations int not null default 0;
+alter table ph_prospects alter column status set default 'a_creer';
+alter table ph_prospects add constraint ph_prospects_status_check
+  check (status in ('a_creer','maquette','appel','rdv','proposition','deal','livraison','client','perdu'));
+create index ph_prospects_stage on ph_prospects (status, stage_at desc) where triage in ('kept','hot');
+create or replace function ph_touch_stage() returns trigger language plpgsql set search_path = public as $$
+begin
+  if new.status is distinct from old.status then new.stage_at = now(); end if;
+  return new;
+end $$;
+create trigger ph_prospects_stage before update on ph_prospects for each row execute function ph_touch_stage();

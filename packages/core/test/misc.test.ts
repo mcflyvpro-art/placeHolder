@@ -7,7 +7,7 @@ import { exclusionReason } from '../src/exclusions';
 import { contrastRatio, ensureAA } from '../src/contrast';
 import { legalDocs } from '../src/legal';
 import { slugify } from '../src/slug';
-import { callOutcomeToStatus } from '../src/pipeline';
+import { callOutcomeToStatus, advance, nextStage, LEGACY_STATUS } from '../src/pipeline';
 
 describe('pricing', () => {
   it('produit 3 offres arrondies', () => {
@@ -135,9 +135,24 @@ describe('legal', () => {
 describe('slug & pipeline', () => {
   it('slugifie', () => expect(slugify('Plomberie Martin & Fils — Lyon')).toBe('plomberie-martin-fils-lyon'));
   it('mappe les résultats d’appel', () => {
-    expect(callOutcomeToStatus('interested')).toBe('interesse');
-    expect(callOutcomeToStatus('callback')).toBe('rappeler');
+    expect(callOutcomeToStatus('interested')).toBe('rdv');
+    expect(callOutcomeToStatus('callback')).toBe('appel');
     expect(callOutcomeToStatus('not_interested')).toBe('perdu');
-    expect(callOutcomeToStatus('no_answer')).toBe('a_appeler');
+    expect(callOutcomeToStatus('no_answer')).toBe('appel');
+  });
+  it('n’avance jamais à reculons et ne ressuscite pas un perdu', () => {
+    expect(advance('rdv', 'maquette')).toBe('rdv');
+    expect(advance('maquette', 'appel')).toBe('appel');
+    expect(advance('perdu', 'deal')).toBe('perdu');
+    expect(advance('appel', 'perdu')).toBe('perdu');
+  });
+  it('donne l’étape suivante', () => {
+    expect(nextStage('a_creer')).toBe('maquette');
+    expect(nextStage('client')).toBeNull();
+    expect(nextStage('perdu')).toBeNull();
+  });
+  it('migre les anciens statuts', () => {
+    expect(LEGACY_STATUS.interesse).toBe('rdv');
+    expect(LEGACY_STATUS.abonnement_actif).toBe('client');
   });
 });

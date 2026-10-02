@@ -19,7 +19,7 @@ export default async function ClosingPage({ searchParams }: { searchParams: Prom
   const sb = await requireOwner();
   const settings = await loadSettings(sb);
   const [{ data: list }, revenue] = await Promise.all([
-    sb.from('ph_prospects').select('id, name, city, status, updated_at').in('status', ['interesse', 'maquette_en_cours', 'maquette_envoyee', 'negociation', 'signe', 'paye', 'en_ligne', 'abonnement_actif']).order('updated_at', { ascending: false }).limit(60),
+    sb.from('ph_prospects').select('id, name, city, status, updated_at').in('status', ['rdv', 'proposition', 'deal', 'livraison', 'client']).order('updated_at', { ascending: false }).limit(60),
     revenueThisYear(),
   ]);
   const threshold = Number((settings.raw?.thresholds as { tva?: number } | null)?.tva ?? 37500);

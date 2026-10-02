@@ -82,7 +82,7 @@ export async function createQuote(prospectId: string, offer: OfferKind) {
     .select('id, number')
     .single();
   if (error) throw new Error(error.message);
-  await sb.from('ph_prospects').update({ status: advance(p.status as Status, 'negociation') }).eq('id', prospectId);
+  await sb.from('ph_prospects').update({ status: advance(p.status as Status, 'proposition') }).eq('id', prospectId);
   await log(prospectId, 'quote', { number, event: 'émis' });
   return { ...quote, signUrl: `${env.appUrl}/signer/${token}` };
 }
@@ -96,7 +96,7 @@ export async function signQuote(token: string, name: string, ip: string | null, 
   const signature = { name: name.trim().slice(0, 120), signedAt: new Date().toISOString(), ip, userAgent: userAgent?.slice(0, 300) ?? null, pdfSha256: q.pdf_sha256, method: 'Signature électronique simple (case « Bon pour accord » + nom)' };
   await sb.from('ph_quotes').update({ status: 'signed', signature }).eq('id', q.id);
   const { data: p } = await sb.from('ph_prospects').select('status, pricing').eq('id', q.prospect_id).single();
-  await sb.from('ph_prospects').update({ status: advance(p!.status as Status, 'signe'), final_price: { offer: q.offer, total: q.total, monthly: q.monthly } }).eq('id', q.prospect_id);
+  await sb.from('ph_prospects').update({ status: advance(p!.status as Status, 'deal'), final_price: { offer: q.offer, total: q.total, monthly: q.monthly } }).eq('id', q.prospect_id);
   await log(q.prospect_id, 'quote', { number: q.number, event: `signé par ${signature.name}` });
   return { ...q, status: 'signed', signature };
 }

@@ -37,7 +37,7 @@ export async function POST(req: Request) {
           stripeRef: (s.payment_intent as string) ?? s.id,
         });
         const { data: p } = await sb.from('ph_prospects').select('status').eq('id', m.prospect_id).single();
-        if (p) await sb.from('ph_prospects').update({ status: advance(p.status as Status, 'paye') }).eq('id', m.prospect_id);
+        if (p) await sb.from('ph_prospects').update({ status: advance(p.status as Status, m.kind === 'deposit' ? 'deal' : 'client') }).eq('id', m.prospect_id);
       }
       if (s.mode === 'subscription' && s.subscription) {
         const sub = await stripe().subscriptions.retrieve(s.subscription as string);
@@ -55,7 +55,7 @@ export async function POST(req: Request) {
           { onConflict: 'stripe_subscription' },
         );
         const { data: p } = await sb.from('ph_prospects').select('status').eq('id', m.prospect_id).single();
-        if (p) await sb.from('ph_prospects').update({ status: advance(p.status as Status, 'abonnement_actif') }).eq('id', m.prospect_id);
+        if (p) await sb.from('ph_prospects').update({ status: advance(p.status as Status, 'client') }).eq('id', m.prospect_id);
       }
       break;
     }

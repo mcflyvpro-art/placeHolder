@@ -16,11 +16,11 @@ export default async function TodayPage() {
   const twoDays = new Date(Date.now() - 48 * 3600e3).toISOString();
 
   const [due, hot, views, changes, building, unpaid, paid, subs, pending] = await Promise.all([
-    sb.from('ph_prospects').select('id, name, city, phone, next_action_at').lte('next_action_at', new Date(Date.now() + 12 * 3600e3).toISOString()).not('status', 'in', '(perdu,en_ligne,abonnement_actif)').order('next_action_at').limit(30),
-    sb.from('ph_prospects').select('id, name, city, phone').eq('triage', 'hot').eq('status', 'a_appeler').limit(20),
+    sb.from('ph_prospects').select('id, name, city, phone, next_action_at').lte('next_action_at', new Date(Date.now() + 12 * 3600e3).toISOString()).not('status', 'in', '(perdu,livraison,client)').in('triage', ['kept', 'hot']).order('next_action_at').limit(30),
+    sb.from('ph_prospects').select('id, name, city, phone').eq('triage', 'hot').in('status', ['a_creer', 'maquette', 'appel']).limit(20),
     sb.from('ph_share_events').select('created_at, device, share_links:ph_share_links!inner(prospect_id, prospects:ph_prospects!inner(id, name, phone))').eq('kind', 'view').gte('created_at', twoDays).order('created_at', { ascending: false }).limit(20),
     sb.from('ph_share_events').select('created_at, message, kind, share_links:ph_share_links!inner(prospect_id, prospects:ph_prospects!inner(id, name))').in('kind', ['change_request', 'like']).gte('created_at', new Date(Date.now() - 14 * 864e5).toISOString()).order('created_at', { ascending: false }).limit(20),
-    sb.from('ph_prospects').select('id, name, city').eq('status', 'maquette_en_cours').limit(20),
+    sb.from('ph_prospects').select('id, name, city').in('status', ['a_creer', 'maquette']).in('triage', ['kept', 'hot']).order('stage_at').limit(20),
     sb.from('ph_subscriptions').select('id, monthly, unpaid_since, prospects:ph_prospects(id, name)').not('unpaid_since', 'is', null),
     sb.from('ph_invoices').select('total').gte('paid_at', monthStart),
     sb.from('ph_subscriptions').select('monthly').eq('status', 'active'),
@@ -108,7 +108,7 @@ export default async function TodayPage() {
           ) : null}
 
           {building.data?.length ? (
-            <Group title={<><PenTool size={13} /> Maquettes en cours</>}>
+            <Group title={<><PenTool size={13} /> Sites à créer ou finir</>}>
               {building.data.map((p) => (
                 <Row key={p.id}>
                   <Link href={`/atelier/${p.id}`} className={s.link}><b>{p.name}</b><span className="c2">{p.city}</span></Link>

@@ -9,6 +9,8 @@ import { PricingPanel } from '@/components/prospect/PricingPanel';
 import { AiPanel, type Analysis, type Direction } from '@/components/prospect/AiPanel';
 import { Journal } from '@/components/prospect/Journal';
 import { ProspectActions } from '@/components/prospect/ProspectActions';
+import { Journey } from '@/components/crm/Journey';
+import { loadCrm } from '@/lib/crm';
 import { trancheLabel, euro, dateFr } from '@/lib/format';
 import type { PricingState } from '@/lib/offers';
 import s from '@/components/prospect/prospect.module.css';
@@ -33,6 +35,7 @@ export default async function ProspectPage({ params }: { params: Promise<{ id: s
     loadSettings(sb),
   ]);
   if (!p) notFound();
+  const crmItem = p.triage === 'kept' || p.triage === 'hot' ? (await loadCrm(sb)).find((x) => x.id === p.id) : undefined;
 
   const sector = sectorByKey(p.sector ?? '');
   const audit = p.audit as SiteAudit | null;
@@ -52,6 +55,7 @@ export default async function ProspectPage({ params }: { params: Promise<{ id: s
         actions={<ProspectActions id={p.id} name={p.name} phone={p.phone} status={p.status as Status} hasSite={!!site?.preview_url} />}
       />
       <Page>
+        {crmItem ? <div style={{ marginBottom: 24 }}><Journey item={crmItem} /></div> : null}
         <div className={s.layout}>
           <div className={s.col}>
             <Group title="Scores">

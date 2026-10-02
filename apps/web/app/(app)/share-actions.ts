@@ -18,7 +18,7 @@ export async function createShareLink(prospectId: string, days: number, password
     password_hash: password ? hashPassword(password) : null,
   });
   const { data: p } = await sb.from('ph_prospects').select('status').eq('id', prospectId).single();
-  if (p) await sb.from('ph_prospects').update({ status: advance(p.status as Status, 'maquette_envoyee') }).eq('id', prospectId);
+  if (p) await sb.from('ph_prospects').update({ status: advance(p.status as Status, 'appel') }).eq('id', prospectId);
   const url = `${env.appUrl}/voir/${token}`;
   return { url, qr: await qrSvgDataUri(url) };
 }

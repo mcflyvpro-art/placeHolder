@@ -13,7 +13,7 @@ export default async function AtelierList() {
     .from('ph_sites')
     .select('id, prospect_id, preview_url, production_domain, mode, prospects:ph_prospects(name, city, status), site_versions:ph_site_versions(sha, created_at, quality)')
     .order('created_at', { ascending: false });
-  const { data: candidates } = await sb.from('ph_prospects').select('id, name, city').in('status', ['interesse', 'maquette_en_cours']).limit(20);
+  const { data: candidates } = await sb.from('ph_prospects').select('id, name, city').in('status', ['a_creer', 'maquette']).in('triage', ['kept', 'hot']).limit(20);
   const withSite = new Set((sites ?? []).map((s) => s.prospect_id));
   const waiting = (candidates ?? []).filter((c) => !withSite.has(c.id));
 
@@ -25,7 +25,7 @@ export default async function AtelierList() {
       <Page>
         <div style={{ display: 'grid', gap: 24 }}>
           {waiting.length ? (
-            <Group title="Intéressés sans maquette">
+            <Group title="Sites à créer">
               {waiting.map((p) => (
                 <Row key={p.id}>
                   <Link href={`/atelier/${p.id}`} style={{ flex: 1, color: 'inherit' }}><b>{p.name}</b> <span className="c2">· {p.city}</span></Link>

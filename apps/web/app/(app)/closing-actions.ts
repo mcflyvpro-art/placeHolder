@@ -108,7 +108,7 @@ export async function connectDomainAction(prospectId: string, domain: string, fo
     if (forwardTo) await cf.setupEmailRouting(zone.id, d, forwardTo);
     await goLive(sb, prospectId, d);
     const { data: p } = await sb.from('ph_prospects').select('status').eq('id', prospectId).single();
-    if (p) await sb.from('ph_prospects').update({ status: advance(p.status as Status, 'en_ligne') }).eq('id', prospectId);
+    if (p) await sb.from('ph_prospects').update({ status: advance(p.status as Status, 'livraison') }).eq('id', prospectId);
     await sb.from('ph_domains').upsert({ prospect_id: prospectId, name: d, status: 'live', forwards: forwardTo ? { contact: forwardTo } : null }, { onConflict: 'name' });
     revalidatePath('/closing');
     return { ok: true, nameservers: zone.name_servers };

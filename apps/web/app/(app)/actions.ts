@@ -53,13 +53,13 @@ export async function triage(id: string, decision: 'kept' | 'dropped' | 'hot') {
     .from('ph_prospects')
     .update({
       triage: decision,
-      status: 'a_appeler',
+      status: 'a_creer',
       slug,
       purge_at: null,
       next_action_at: decision === 'hot' ? new Date().toISOString() : null,
     })
     .eq('id', id);
-  await log(sb, id, 'status', { to: 'a_appeler', via: decision });
+  await log(sb, id, 'status', { to: 'a_creer', via: decision });
   refreshLists();
   after(() => enrichProspect(id).catch(() => {}));
 }
@@ -82,7 +82,7 @@ export async function logCall(id: string, outcome: CallOutcome, nextAt?: string 
   if (!p) return;
   const attempts = (p.call_attempts ?? 0) + 1;
   const target = callOutcomeToStatus(outcome);
-  const status: Status = target === 'perdu' ? 'perdu' : advance(p.status as Status, target);
+  const status: Status = advance(p.status as Status, target);
   await sb
     .from('ph_prospects')
     .update({
@@ -90,26 +90,28 @@ export async function logCall(id: string, outcome: CallOutcome, nextAt?: string 
       call_attempts: attempts,
       next_action_at: outcome === 'callback' ? nextAt ?? null : outcome === 'no_answer' ? new Date(Date.now() + 2 * 864e5).toISOString() : null,
       lost_reason: outcome === 'not_interested' ? 'Pas intéressé au téléphone' : null,
+      lost_stage: outcome === 'not_interested' ? p.status : null,
       purge_at: outcome === 'not_interested' ? new Date(Date.now() + 365 * 864e5).toISOString() : null,
     })
     .eq('id', id);
   await log(sb, id, 'call', { outcome, nextAt, note, attempts });
-  revalidatePath('/today');
-  revalidatePath('/pipeline');
+  refreshLists();
 }
 
 export async function setStatus(id: string, status: Status, lostReason?: string) {
   const sb = await requireOwner();
+  const { data: cur } = await sb.from('ph_prospects').select('status').eq('id', id).single();
   await sb
     .from('ph_prospects')
     .update({
       status,
+      lost_stage: status === 'perdu' ? cur?.status ?? null : null,
       lost_reason: status === 'perdu' ? lostReason ?? 'Non précisé' : null,
       purge_at: status === 'perdu' ? new Date(Date.now() + 365 * 864e5).toISOString() : null,
     })
     .eq('id', id);
   await log(sb, id, 'status', { to: status, lostReason });
-  revalidatePath('/pipeline');
+  refreshLists();
 }
 
 export async function setNextAction(id: string, at: string | null) {

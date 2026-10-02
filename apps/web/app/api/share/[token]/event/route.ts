@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { advance, type Status } from '@ph/core';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { verifyPassword } from '@/lib/password';
 
@@ -38,8 +37,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
     data: { device, message },
   });
   if (kind !== 'view') {
-    const { data: p } = await sb.from('ph_prospects').select('status').eq('id', link.prospect_id).single();
-    if (p) await sb.from('ph_prospects').update({ status: advance(p.status as Status, 'negociation'), next_action_at: new Date().toISOString() }).eq('id', link.prospect_id);
+    // Un retour client = action à faire tout de suite ; une demande de modif = une itération de maquette.
+    const { data: p } = await sb.from('ph_prospects').select('iterations').eq('id', link.prospect_id).single();
+    await sb
+      .from('ph_prospects')
+      .update({ next_action_at: new Date().toISOString(), ...(kind === 'change_request' ? { iterations: (p?.iterations ?? 0) + 1 } : {}) })
+      .eq('id', link.prospect_id);
   }
   return NextResponse.json({ ok: true });
 }

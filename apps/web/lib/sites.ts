@@ -1,5 +1,6 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { advance, type Status } from '@ph/core';
 import { env } from '@/lib/env';
 import { buildBrief } from '@/lib/sitebrief';
 import { fetchHtml, assertPublicUrl } from '@/lib/sources/fetchsite';
@@ -90,7 +91,7 @@ export async function createSite(sb: SupabaseClient, prospectId: string) {
   if (env.siteWebhookSecret) await gh.setSecret(repo, 'SITE_WEBHOOK_SECRET', env.siteWebhookSecret);
 
   await pushBrief(sb, prospectId, 'brief : données placeHolder');
-  await sb.from('ph_prospects').update({ status: p.status === 'interesse' || p.status === 'a_appeler' || p.status === 'rappeler' ? 'maquette_en_cours' : p.status }).eq('id', prospectId);
+  await sb.from('ph_prospects').update({ status: advance(p.status as Status, 'maquette') }).eq('id', prospectId);
   await sb.from('ph_activities').insert({ prospect_id: prospectId, kind: 'site', data: { text: `Site créé · ${host}` } });
   return site;
 }

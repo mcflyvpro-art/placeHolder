@@ -2,7 +2,7 @@
 
 import { useRef, useTransition } from 'react';
 import { Phone, StickyNote, ArrowRightLeft, Eye, Heart, MessageSquareWarning, FileText, CreditCard, Globe } from 'lucide-react';
-import { STATUS_LABEL, CALL_OUTCOMES, type Status } from '@ph/core';
+import { STATUS_LABEL, CALL_OUTCOMES, LEGACY_STATUS, type Status } from '@ph/core';
 import { Button, Group, fieldClass } from '@/components/ui';
 import { addNote } from '@/app/(app)/actions';
 import { relative } from '@/lib/format';
@@ -23,7 +23,7 @@ function describe(a: Activity): string {
     case 'note':
       return String(d.text ?? '');
     case 'status':
-      return `→ ${STATUS_LABEL[d.to as Status] ?? d.to}${d.lostReason ? ` · ${d.lostReason}` : ''}`;
+      return `→ ${STATUS_LABEL[(LEGACY_STATUS[String(d.to)] ?? d.to) as Status] ?? d.to}${d.lostReason ? ` · ${d.lostReason}` : ''}`;
     case 'share_view':
       return `Maquette ouverte${d.device ? ` · ${d.device}` : ''}`;
     case 'share_like':
