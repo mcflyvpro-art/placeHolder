@@ -13,6 +13,12 @@ import {
 import { requireOwner } from '@/lib/auth';
 import { enrichProspect } from '@/lib/enrich';
 
+/** Écrans qui affichent l'état des prospects : vidés du cache client après chaque changement. */
+function refreshLists() {
+  for (const path of ['/triage', '/pipeline', '/today', '/atelier', '/clients']) revalidatePath(path);
+  revalidatePath('/', 'layout');
+}
+
 async function log(sb: Awaited<ReturnType<typeof requireOwner>>, prospectId: string, kind: string, data: object = {}) {
   await sb.from('ph_activities').insert({ prospect_id: prospectId, kind, data });
 }
@@ -38,6 +44,7 @@ export async function triage(id: string, decision: 'kept' | 'dropped' | 'hot') {
     const hashes = [p.place_id && (await sha256Hex(`place:${p.place_id}`)), p.siren && (await sha256Hex(`siren:${p.siren}`))].filter(Boolean) as string[];
     if (hashes.length) await sb.from('ph_blacklist').upsert(hashes.map((hash) => ({ hash })));
     await sb.from('ph_prospects').update({ triage: 'dropped', purge_at: new Date(Date.now() + days * 864e5).toISOString() }).eq('id', id);
+    refreshLists();
     return;
   }
 
@@ -53,6 +60,7 @@ export async function triage(id: string, decision: 'kept' | 'dropped' | 'hot') {
     })
     .eq('id', id);
   await log(sb, id, 'status', { to: 'a_appeler', via: decision });
+  refreshLists();
   after(() => enrichProspect(id).catch(() => {}));
 }
 
@@ -65,6 +73,7 @@ export async function undoTriage(id: string) {
     if (hashes.length) await sb.from('ph_blacklist').delete().in('hash', hashes);
   }
   await sb.from('ph_prospects').update({ triage: 'pending', purge_at: null, next_action_at: null }).eq('id', id);
+  refreshLists();
 }
 
 export async function logCall(id: string, outcome: CallOutcome, nextAt?: string | null, note?: string) {
