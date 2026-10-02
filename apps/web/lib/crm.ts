@@ -1,11 +1,13 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Proposal, Stage, Status } from '@ph/core';
+import { computeOffers, gridKey, sectorByKey, type Proposal, type Stage, type Status } from '@ph/core';
+import { loadSettings } from '@/lib/settings';
 import { effectiveOffers, type PricingState } from '@/lib/offers';
 import type { CrmItem } from '@/components/crm/types';
 
 /** Charge tous les prospects suivis (gardés au Tri) avec les données utiles à chaque étape. */
 export async function loadCrm(sb: SupabaseClient): Promise<CrmItem[]> {
+  const { grid } = await loadSettings(sb);
   const [{ data: rows }, { data: sites }, { data: versions }, { data: links }, { data: quotes }, { data: invoices }, { data: subs }] = await Promise.all([
     sb
       .from('ph_prospects')
@@ -35,6 +37,13 @@ export async function loadCrm(sb: SupabaseClient): Promise<CrmItem[]> {
   const deposit = new Set((invoices ?? []).filter((i) => i.kind === 'deposit').map((i) => i.prospect_id));
   const subBy = new Map((subs ?? []).filter((s) => s.status === 'active').map((s) => [s.prospect_id, Number(s.monthly)]));
 
+  // Estimation tant que la tarification n'a pas été ajustée sur la fiche.
+  const estimate = (sector: string | null, pay: number) => {
+    const sec = sectorByKey(sector ?? '');
+    const o = computeOffers({ pages: sec?.defaultPages ?? 5, options: ['form'], sector: gridKey(sec?.group), payScore: pay, grid });
+    return { oneOff: o.oneOff.price, setup: o.hybrid.setup, hybridMonthly: o.hybrid.monthly, subMonthly: o.subscription.monthly };
+  };
+
   return (rows ?? []).map((r) => {
     const site = siteBy.get(r.id);
     const v = site ? versionsBySite.get(site.id) : undefined;
@@ -57,7 +66,7 @@ export async function loadCrm(sb: SupabaseClient): Promise<CrmItem[]> {
       proposal: r.proposal as Proposal | null,
       iterations: r.iterations,
       callAttempts: r.call_attempts,
-      suggested: effectiveOffers(r.pricing as PricingState | null),
+      suggested: effectiveOffers(r.pricing as PricingState | null) ?? estimate(r.sector, r.pay_score),
       site: site ? { previewUrl: site.preview_url, domain: site.production_domain, mode: site.mode, versions: v?.n ?? 0, lastPassed: v?.lastPassed ?? null } : null,
       views: viewsBy.get(r.id) ?? 0,
       quote: quoteBy.get(r.id) ?? null,
