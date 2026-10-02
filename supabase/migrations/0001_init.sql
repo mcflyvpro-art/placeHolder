@@ -344,3 +344,6 @@ grant execute on function ph_next_number(text) to service_role;
 -- Storage : buckets privés, aucune politique → accès service role uniquement.
 insert into storage.buckets (id, name, public) values ('ph-assets', 'ph-assets', false), ('ph-documents', 'ph-documents', false)
   on conflict do nothing;
+
+-- 0002 : budget de requêtes Google par recherche
+alter table ph_searches add column budget int not null default 1, add column calls int not null default 0;

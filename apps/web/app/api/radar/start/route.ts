@@ -23,7 +23,7 @@ export async function POST(req: Request) {
   const { sectors, zone, budget } = parsed.data;
   const tasks = planTasks(sectors, zone, budget);
   if (!tasks.length) return NextResponse.json({ error: 'empty' }, { status: 400 });
-  const { data, error } = await sb.from('ph_searches').insert({ sectors, zone, tasks }).select('id').single();
+  const { data, error } = await sb.from('ph_searches').insert({ sectors, zone, tasks, budget }).select('id').single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ id: data.id, total: tasks.length });
+  return NextResponse.json({ id: data.id, total: budget });
 }

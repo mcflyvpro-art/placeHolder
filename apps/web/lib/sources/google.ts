@@ -30,7 +30,7 @@ type RawPlace = {
   id: string;
   displayName?: { text: string };
   formattedAddress?: string;
-  addressComponents?: { longText: string; types: string[] }[];
+  addressComponents?: { longText?: string; types?: string[] }[];
   location?: { latitude: number; longitude: number };
   nationalPhoneNumber?: string;
   websiteUri?: string;
@@ -43,7 +43,7 @@ type RawPlace = {
 };
 
 export function mapPlace(p: RawPlace): Place {
-  const comp = (t: string) => p.addressComponents?.find((c) => c.types.includes(t))?.longText ?? null;
+  const comp = (t: string) => p.addressComponents?.find((c) => c.types?.includes(t))?.longText ?? null;
   return {
     id: p.id,
     name: p.displayName?.text ?? '',

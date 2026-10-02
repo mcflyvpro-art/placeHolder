@@ -48,6 +48,10 @@ describe('google.mapPlace', () => {
     });
     expect(p).toMatchObject({ name: 'Plomberie Martin', postalCode: '69003', city: 'Lyon', reviews: 42, website: null });
   });
+  it('tolère un composant d’adresse sans types', () => {
+    const p = mapPlace({ id: 'x', addressComponents: [{ longText: 'France' }, { longText: '69001', types: ['postal_code'] }] });
+    expect(p.postalCode).toBe('69001');
+  });
 });
 
 describe('gouv.mapCompany', () => {

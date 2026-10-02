@@ -173,21 +173,23 @@ export async function radarStep(sb: SupabaseClient, searchId: string): Promise<S
   const idx = tasks.findIndex((t) => !t.done);
   const base = { total, found: search.found, kept: search.kept, excluded: search.excluded };
 
-  if (idx === -1 || search.status !== 'running') {
+  // Le budget compte les requêtes Google réellement faites (pages comprises), pas les villes.
+  if (idx === -1 || search.status !== 'running' || search.calls >= search.budget) {
     if (search.status === 'running') await sb.from('ph_searches').update({ status: 'done' }).eq('id', searchId);
     const q = await googleQuota(sb);
-    return { ...base, done: true, progress: total, quota: { used: q.used, cap: q.cap } };
+    return { ...base, total: search.budget, done: true, progress: search.budget, quota: { used: q.used, cap: q.cap } };
   }
 
   const quota = await googleQuota(sb);
   if (!quota.ok) {
     await sb.from('ph_searches').update({ status: 'paused', error: 'Quota Google du mois atteint' }).eq('id', searchId);
-    return { ...base, done: true, progress: idx, quota: { used: quota.used, cap: quota.cap }, error: 'quota' };
+    return { ...base, total: search.budget, done: true, progress: search.calls, quota: { used: quota.used, cap: quota.cap }, error: 'quota' };
   }
 
   const task = tasks[idx]!;
   const { places, next } = await textSearch(`${task.keyword} ${task.city}`, task.token);
   await countGoogleCall(sb);
+  const calls = search.calls + 1;
 
   const outcomes = await pool(places, 5, (p) => processPlace(sb, p, task, searchId).catch(() => 'excluded' as Outcome));
   const kept = outcomes.filter((o) => o === 'kept').length;
@@ -203,16 +205,16 @@ export async function radarStep(sb: SupabaseClient, searchId: string): Promise<S
   const found = search.found + places.length;
   const keptTotal = search.kept + kept;
   const excludedTotal = search.excluded + excluded;
-  const finished = tasks.every((t) => t.done);
+  const finished = tasks.every((t) => t.done) || calls >= search.budget;
   await sb
     .from('ph_searches')
-    .update({ tasks, found, kept: keptTotal, excluded: excludedTotal, status: finished ? 'done' : 'running' })
+    .update({ tasks, calls, found, kept: keptTotal, excluded: excludedTotal, status: finished ? 'done' : 'running' })
     .eq('id', searchId);
 
   return {
     done: finished,
-    progress: tasks.filter((t) => t.done).length,
-    total,
+    progress: Math.min(calls, search.budget),
+    total: search.budget,
     found,
     kept: keptTotal,
     excluded: excludedTotal,
